@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:hangr/pages/home.dart';
-import 'dart:async';
-import 'dart:io';
-import 'package:camera/camera.dart';
+import 'package:hangr/pages/loading_screen.dart';
+import 'package:hangr/themes.dart';
+import 'package:provider/provider.dart';
 
-Future<void> main() async {
+main() {
   WidgetsFlutterBinding.ensureInitialized();
-  List<CameraDescription> cameras = [];
 
-  try {
-    cameras = await availableCameras();
-  } on Exception catch (e) {
-    exit(1);
-  }
-
-  runApp(MaterialApp(initialRoute: '/home', routes: {
-    '/': (context) => SizedBox(),
-    '/home': (context) => DefaultTabController(
-        length: 3, child: Home(cameras: cameras), initialIndex: 1),
-    '/location': (context) => SizedBox(),
-  }));
+  runApp(ChangeNotifierProvider(
+    create: (context) => ThemeProvider(),
+    builder: (context, _) {
+      final themeProvider = Provider.of<ThemeProvider>(context);
+      return MaterialApp(
+          themeMode: themeProvider.mode,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const Loading(),
+            '/home': (context) => const DefaultTabController(
+                length: 3, child: Home(), initialIndex: 1),
+            '/location': (context) => SizedBox(),
+          });
+    },
+  ));
 }

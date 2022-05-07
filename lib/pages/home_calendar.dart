@@ -10,8 +10,7 @@ class HomeCalendar extends StatefulWidget {
 class _HomeCalendarState extends State<HomeCalendar> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.grey[850]
+    return Scaffold(
     );
   }
 }
