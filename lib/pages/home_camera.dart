@@ -13,9 +13,12 @@ class HomeCamera extends StatefulWidget {
 }
 
 class _HomeCameraState extends State<HomeCamera> {
-  late CameraController? _controller;
+  static const _errorMessage = "No Camera Available";
+  static const _maxZoomLevel = 5.0;
+  static const _minZoomLevel = 1.0;
+  static const _aspectRatio = 2 / 3;
 
-  final double _maxZoomLevel = 5.0;
+  CameraController? _controller;
   double _scaleFactor = 1.0;
   double _baseScaleFactor = 1.0;
 
@@ -32,26 +35,45 @@ class _HomeCameraState extends State<HomeCamera> {
             backgroundColor: Colors.black,
             body: Center(
               child: Text(
-                "No Camera Available",
+                _errorMessage,
                 style: AppTheme.light.textTheme.displayLarge,
               ),
             ))
-        : GestureDetector(
-                    onScaleStart: (details) {
-                      _baseScaleFactor = _scaleFactor;
-                    },
-                    onScaleUpdate: (details) {
-                      setState(() {
-                        _scaleFactor = _baseScaleFactor * details.scale;
-                        if (_scaleFactor > _maxZoomLevel) {
-                          _scaleFactor = _maxZoomLevel;
-                        } else if (_scaleFactor < 1.0) {
-                          _scaleFactor = 1.0;
-                        }
-                        _controller!.setZoomLevel(_scaleFactor);
-                      });
-                    },
-                    child: CameraPreview(_controller!));
+        : Scaffold(
+            backgroundColor: Colors.black,
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                        onScaleStart: (details) {
+                          _baseScaleFactor = _scaleFactor;
+                        },
+                        onScaleUpdate: (details) {
+                          setState(() {
+                            _scaleFactor = _baseScaleFactor * details.scale;
+                            if (_scaleFactor > _maxZoomLevel) {
+                              _scaleFactor = _maxZoomLevel;
+                            } else if (_scaleFactor < _minZoomLevel) {
+                              _scaleFactor = _minZoomLevel;
+                            }
+                            _controller!.setZoomLevel(_scaleFactor);
+                          });
+                        },
+                        child: AspectRatio(
+                            aspectRatio: _aspectRatio,
+                            child: CameraPreview(_controller!))),
+                    Expanded(
+                        child: Container(
+                      color: Colors.black,
+                    ))
+                  ],
+                ),
+              ),
+            ),
+          );
     return screen;
   }
 }

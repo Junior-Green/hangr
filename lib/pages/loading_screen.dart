@@ -12,11 +12,11 @@ class Loading extends StatefulWidget {
 
 class _LoadingState extends State<Loading> {
   Future<void> initCamera() async {
-    Camera camera = Camera(await availableCameras());
-    await camera.initCamera(CameraLensDirection.back);
+    Camera _camera = Camera(await availableCameras());
+    await _camera.initCamera(CameraLensDirection.back);
 
     Navigator.pushReplacementNamed(context, '/home',
-        arguments: {'camera': camera});
+        arguments: {'camera': _camera});
   }
 
   @override
@@ -28,11 +28,10 @@ class _LoadingState extends State<Loading> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.grey[850],
-        body: const Center(
+        body: Center(
             child: SpinKitFoldingCube(
-          color: Colors.white,
-          size: 90.0,
-        )));
+      color: Theme.of(context).colorScheme.primary,
+      size: 90.0,
+    )));
   }
 }

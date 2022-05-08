@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:hangr/pages/home_calendar.dart';
 import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
@@ -6,50 +7,84 @@ import 'package:hangr/pages/home_wardrobe.dart';
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
 
-  static final tabs = [
-    const Tab(icon: Icon(Icons.camera_alt_rounded, size: 50)),
+  static const _tabs = [
+    Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: const Tab(icon: Icon(Icons.camera_alt_rounded, size: 30)),
+    ),
     const Tab(icon: Icon(Icons.calendar_month_rounded, size: 50)),
-    const Tab(icon: Icon(Icons.inventory, size: 50))
+    Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: const Tab(icon: Icon(Icons.inventory, size: 30)),
+    )
   ];
 
   @override
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
-  Map data = {};
-  ThemeData theme = ThemeData.light();
+class _HomeState extends State<Home> with TickerProviderStateMixin {
+  Map _data = {};
+  ThemeData _theme = ThemeData.light();
+  TabController? _controller;
+  bool _isTransparent = false;
 
   @override
   void initState() {
+    _controller = new TabController(length: Home._tabs.length, vsync: this, initialIndex: 1);
     super.initState();
   }
 
   @override
+  void dispose() {
+    _controller!.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    data = ModalRoute.of(context)!.settings.arguments as Map;
-    theme = Theme.of(context);
+    _data = ModalRoute.of(context)!.settings.arguments as Map;
+    _theme = Theme.of(context);
+    timeDilation = 0.75;
+
+    _controller!.addListener(() {
+      setState(() {
+        _isTransparent = _controller!.index == 0 ? true : false;
+      });
+    });
 
     return Scaffold(
       body: TabBarView(
+        controller: _controller,
+        physics: (_controller!.index == 1) ? NeverScrollableScrollPhysics() : null,
         children: [
-          HomeCamera(
-              camera: data['camera']),
+          HomeCamera(camera: _data['camera']),
           HomeCalendar(),
           HomeWardrobe(),
         ],
       ),
-      bottomNavigationBar: TabBar(
-        enableFeedback: true,
-        tabs: Home.tabs,
-        indicatorWeight: 3,
-        labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-        indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
-        labelColor: theme.colorScheme.secondary,
-        unselectedLabelColor: theme.colorScheme.tertiary,
-        indicatorSize: TabBarIndicatorSize.label,
-        indicatorColor: theme.colorScheme.secondary,
-      ),
+      bottomNavigationBar: _isTransparent
+          ? Container(width: 0, height: 0)
+          : TabBar(
+              enableFeedback: true,
+              isScrollable: false,
+              controller: _controller,
+              tabs: Home._tabs,
+              indicatorWeight: 3,
+              labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+              indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
+              labelColor: _isTransparent
+                  ? Colors.transparent
+                  : _theme.colorScheme.secondary,
+              unselectedLabelColor: _isTransparent
+                  ? Colors.transparent
+                  : const Color.fromARGB(90, 214, 214, 214),
+              overlayColor: null,
+              indicatorSize: TabBarIndicatorSize.label,
+              indicatorColor: _isTransparent
+                  ? Colors.transparent
+                  : _theme.colorScheme.secondary,
+            ),
       extendBody: true,
     );
   }

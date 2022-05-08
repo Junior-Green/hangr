@@ -18,8 +18,7 @@ main() {
           initialRoute: '/',
           routes: {
             '/': (context) => const Loading(),
-            '/home': (context) => const DefaultTabController(
-                length: 3, child: Home(), initialIndex: 1),
+            '/home': (context) => const Home(),
             '/location': (context) => SizedBox(),
           });
     },
