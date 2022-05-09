@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:hangr/pages/home_calendar.dart';
 import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
+import 'package:flutter/services.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -31,7 +32,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    _controller = new TabController(length: Home._tabs.length, vsync: this, initialIndex: 1);
+    _controller = new TabController(
+        length: Home._tabs.length, vsync: this, initialIndex: 1);
     super.initState();
   }
 
@@ -45,7 +47,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     _data = ModalRoute.of(context)!.settings.arguments as Map;
     _theme = Theme.of(context);
-    timeDilation = 0.75;
+    timeDilation = 0.25;
 
     _controller!.addListener(() {
       setState(() {
@@ -56,9 +58,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     return Scaffold(
       body: TabBarView(
         controller: _controller,
-        physics: (_controller!.index == 1) ? NeverScrollableScrollPhysics() : null,
+        physics:
+            (_controller!.index == 1) ? NeverScrollableScrollPhysics() : null,
         children: [
-          HomeCamera(camera: _data['camera']),
+          HomeCamera(cameras: _data['camera']),
           HomeCalendar(),
           HomeWardrobe(),
         ],
@@ -66,6 +69,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       bottomNavigationBar: _isTransparent
           ? Container(width: 0, height: 0)
           : TabBar(
+              onTap: (int index) {
+                HapticFeedback.mediumImpact();
+              },
               enableFeedback: true,
               isScrollable: false,
               controller: _controller,

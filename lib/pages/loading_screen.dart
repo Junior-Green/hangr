@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hangr/helpers/camera.dart';
 import 'package:camera/camera.dart';
@@ -12,11 +14,17 @@ class Loading extends StatefulWidget {
 
 class _LoadingState extends State<Loading> {
   Future<void> initCamera() async {
-    Camera _camera = Camera(await availableCameras());
-    await _camera.initCamera(CameraLensDirection.back);
+    try {
+      Camera _camera = Camera(await availableCameras());
+      await _camera.setCamera(CameraLensDirection.back);
+      await _camera.initCamera();
 
-    Navigator.pushReplacementNamed(context, '/home',
-        arguments: {'camera': _camera});
+      Navigator.pushReplacementNamed(context, '/home',
+          arguments: {'camera': _camera});
+    } on Exception catch (e) {
+      print(e);
+      exit(1);
+    }
   }
 
   @override

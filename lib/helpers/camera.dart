@@ -1,27 +1,44 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
 
 class Camera {
+  static const _resolution = ResolutionPreset.veryHigh; //1080p
+  static const DeviceOrientation _orientation = DeviceOrientation.portraitUp;
+
   final List<CameraDescription> _cameras;
   CameraController? _controller;
-  double? _maxZoom;
 
   Camera(List<CameraDescription> cameras) : _cameras = cameras;
 
-  bool isCameraAvailiable() => _cameras.isNotEmpty;
-
-  Future<void> initCamera(CameraLensDirection dir) async {
-    if (!isCameraAvailiable()) return;
-
+  bool setCamera(CameraLensDirection dir) {
+    if (!_isCameraAvailiable()) return false;
     for (var camera in _cameras) {
       if (camera.lensDirection == dir) {
-        _controller = CameraController(camera, ResolutionPreset.max);
-        await _controller!.initialize();
-        _maxZoom = await _controller!.getMaxZoomLevel();
+        _controller = CameraController(camera, _resolution);
         break;
       }
     }
+    return true;
   }
 
-  CameraController? get getController => _controller;
-  double? get getMaxZoom => _maxZoom;
+  void toggleCamera() {
+    if (_controller == null) {
+      setCamera(CameraLensDirection.back);
+    } else if (_controller!.description.lensDirection ==
+        CameraLensDirection.back) {
+      setCamera(CameraLensDirection.front);
+    } else {
+      setCamera(CameraLensDirection.back);
+    }
+  }
+
+  Future<bool> initCamera() async {
+    if (_controller == null) return false;
+    await _controller!.initialize();
+    await _controller!.lockCaptureOrientation(_orientation);
+    return true;
+  }
+
+  CameraController? get controller => _controller;
+  bool _isCameraAvailiable() => _cameras.isNotEmpty;
 }

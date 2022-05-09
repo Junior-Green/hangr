@@ -9,23 +9,23 @@ class ThemeProvider extends ChangeNotifier {
 class AppTheme {
   static final dark = ThemeData(
       primaryColor: Colors.black,
-      scaffoldBackgroundColor: Colors.grey[900],
+      scaffoldBackgroundColor: Colors.black,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
           primary: Colors.white,
           secondary: Color.fromARGB(255, 210, 3, 79),
-          tertiary: Color.fromARGB(137, 214, 214, 214)),
+          tertiary: Colors.grey[900]),
       textTheme: Typography.blackCupertino);
 
   static final light = ThemeData(
     primaryColor: Colors.white,
     splashColor: Colors.transparent,
     highlightColor: Colors.transparent,
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme.dark(
         primary: Color.fromARGB(255, 0, 0, 0),
         secondary: Color.fromARGB(255, 210, 3, 79),
-        tertiary: Color.fromARGB(137, 214, 214, 214)),
+        tertiary: Colors.grey[900]),
     textTheme: Typography.whiteCupertino,
     scaffoldBackgroundColor: Colors.white,
   );
