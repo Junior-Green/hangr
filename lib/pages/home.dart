@@ -7,19 +7,6 @@ import 'package:flutter/services.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
-
-  static const _tabs = [
-    Padding(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-      child: const Tab(icon: Icon(Icons.camera_alt_rounded, size: 30)),
-    ),
-    const Tab(icon: Icon(Icons.calendar_month_rounded, size: 50)),
-    Padding(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-      child: const Tab(icon: Icon(Icons.inventory, size: 30)),
-    )
-  ];
-
   @override
   State<Home> createState() => _HomeState();
 }
@@ -30,10 +17,22 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   TabController? _controller;
   bool _isTransparent = false;
 
+  static const _tabs = [
+    Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: const Tab(icon: Icon(Icons.add_a_photo_rounded, size: 30)),
+    ),
+    const Tab(icon: Icon(Icons.calendar_month_rounded, size: 50)),
+    Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: const Tab(icon: Icon(Icons.inventory, size: 30)),
+    )
+  ];
+
   @override
   void initState() {
-    _controller = new TabController(
-        length: Home._tabs.length, vsync: this, initialIndex: 1);
+    _controller =
+        new TabController(length: _tabs.length, vsync: this, initialIndex: 1);
     super.initState();
   }
 
@@ -75,21 +74,21 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               enableFeedback: true,
               isScrollable: false,
               controller: _controller,
-              tabs: Home._tabs,
+              tabs: _tabs,
               indicatorWeight: 3,
               labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
               indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
               labelColor: _isTransparent
                   ? Colors.transparent
-                  : _theme.colorScheme.secondary,
+                  : _theme.colorScheme.tertiary,
               unselectedLabelColor: _isTransparent
                   ? Colors.transparent
-                  : const Color.fromARGB(90, 214, 214, 214),
+                  : _theme.colorScheme.onSecondary,
               overlayColor: null,
               indicatorSize: TabBarIndicatorSize.label,
               indicatorColor: _isTransparent
                   ? Colors.transparent
-                  : _theme.colorScheme.secondary,
+                  : _theme.colorScheme.tertiary,
             ),
       extendBody: true,
     );
