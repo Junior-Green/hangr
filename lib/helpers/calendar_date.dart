@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hangr/helpers/outfit.dart';
 
 class CalendarDate extends StatefulWidget {
-  static final _today = DateTime.now();
+  static final _today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   final DateTime _date;
-  Outfit? _outfit;
+  late final Outfit? _outfit;
 
   CalendarDate(this._date, {Key? key}) : super(key: key);
 
@@ -16,14 +16,14 @@ class _CalendarDateState extends State<CalendarDate> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 50,
+        height: 100,
         decoration: BoxDecoration(
             border: Border(
                 top: BorderSide(
                     color: Theme.of(context).colorScheme.secondary))),
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: _getContents(context)));
   }
 
