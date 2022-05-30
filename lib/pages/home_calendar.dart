@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hangr/helpers/calendar_builder.dart';
+import 'package:indexed_list_view/indexed_list_view.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class HomeCalendar extends StatefulWidget {
   const HomeCalendar({Key? key}) : super(key: key);
