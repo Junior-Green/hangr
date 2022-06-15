@@ -1,11 +1,4 @@
 import 'package:flutter/material.dart';
-
-class ThemeProvider extends ChangeNotifier {
-  ThemeMode mode = ThemeMode.system;
-
-  bool get isDarkMode => mode == ThemeMode.dark;
-}
-
 class AppTheme {
   static final dark = ThemeData(
       primaryColor: Colors.black,
@@ -15,9 +8,9 @@ class AppTheme {
       colorScheme: ColorScheme.dark(
         primary: Colors.black,
         onPrimary: Colors.white,
-        tertiary: Color.fromARGB(255, 210, 3, 79),
         secondary: Colors.grey[900]!,
         onSecondary: Color.fromARGB(128, 214, 214, 214),
+        tertiary: Color.fromARGB(255, 210, 3, 79)
       ),
       textTheme: Typography.whiteCupertino);
 

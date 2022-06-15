@@ -1,7 +1,7 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:hangr/helpers/camera.dart';
-import 'package:hangr/themes.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -26,6 +26,9 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
   late final AudioCache _audioCache;
   late final AnimationController _toggleAnimation;
   late final AnimationController _cameraAnimation;
+
+  String _imagePath = "";
+  bool _isPressed = false;
 
   double _scaleFactor = 1.0;
   double _baseScaleFactor = 1.0;
@@ -58,7 +61,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
       body: Center(
         child: Text(
           _errorMessage,
-          style: AppTheme.light.textTheme.displayLarge,
+          style: TextStyle(color: Colors.white),
         ),
       ));
 
@@ -73,9 +76,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 GestureDetector(
-                    onScaleStart: (details) {
-                      _baseScaleFactor = _scaleFactor;
-                    },
+                    onScaleStart: (details) => _baseScaleFactor = _scaleFactor,
                     onScaleUpdate: (details) => _setZoom,
                     child: AspectRatio(
                         aspectRatio: _aspectRatio,
@@ -88,11 +89,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
                       Expanded(child: SizedBox()),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
-                            _cameraAnimation.forward();
-                            _audioCache.play(_shutterSound);
-                            HapticFeedback.mediumImpact();
-                          },
+                          onTap: _takePicture,
                           child: Transform.scale(
                               scale: _cameraScale,
                               child:
@@ -101,13 +98,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
                       ),
                       Expanded(
                           child: GestureDetector(
-                        onTap: () {
-                          if (!_toggleAnimation.isCompleted)
-                            _toggleAnimation.forward();
-                            
-                          HapticFeedback.lightImpact();
-                          _toggleCamera();
-                        },
+                        onTap: _switchLens,
                         child: Transform.scale(
                           scale: _toggleScale,
                           child: Container(
@@ -134,7 +125,42 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
         ),
       );
 
-  _initAnimations() {
+  Widget _dialogBuilder(BuildContext context) => AlertDialog(
+        contentPadding: EdgeInsets.fromLTRB(30, 15, 30, 10),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(15))),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        title: Center(
+            child: Text(
+          "Use Image?",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        )),
+        content: Image.file(File(_imagePath)),
+        actions: [
+          TextButton(
+              onPressed: () =>
+                  Navigator.of(context, rootNavigator: true).pop('dialog'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: const Text("Cancel",
+                    style: TextStyle(color: Colors.red, fontSize: 18)),
+              )),
+          TextButton(
+              onPressed: () =>
+                  Navigator.of(context, rootNavigator: true).pop('dialog'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: const Text("Use",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 18)),
+              )),
+        ],
+      );
+
+  void _initAnimations() {
     _toggleAnimation = AnimationController(
         vsync: this,
         duration: Duration(milliseconds: 200),
@@ -162,19 +188,22 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
       });
   }
 
-  _initAudioCache() {
+  void _initAudioCache() {
     _audioCache = AudioCache(
+      respectSilence: true,
       prefix: 'assets/audio/',
       fixedPlayer: AudioPlayer()..setReleaseMode(ReleaseMode.STOP),
     );
+
+    _audioCache.load(_shutterSound);
   }
 
-  _setAnimationScale() {
+  void _setAnimationScale() {
     _toggleScale = 1 - _toggleAnimation.value;
     _cameraScale = 1 - _cameraAnimation.value;
   }
 
-  _toggleCamera() async {
+  void _toggleCamera() async {
     widget.cameras.toggleCamera();
     await widget.cameras.initCamera();
     setState(() {
@@ -182,7 +211,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
     });
   }
 
-  _setZoom(double multiplier) {
+  void _setZoom(double multiplier) {
     setState(() {
       _scaleFactor = _baseScaleFactor * multiplier;
       if (_scaleFactor > _maxZoomLevel) {
@@ -192,5 +221,39 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
       }
       _camera!.setZoomLevel(_scaleFactor);
     });
+  }
+
+  void _takePicture() async {
+    try {
+      if (!_isPressed) {
+        setState(() {
+          _isPressed = true;
+        });
+        _audioCache.play(_shutterSound);
+        _cameraAnimation.forward();
+        HapticFeedback.mediumImpact();
+
+        final image = await _camera!.takePicture();
+        _imagePath = image.path;
+
+        showDialog(
+            context: context,
+            builder: _dialogBuilder,
+            barrierDismissible: false);
+
+        setState(() {
+          _isPressed = false;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _switchLens() {
+    if (!_toggleAnimation.isCompleted) _toggleAnimation.forward();
+
+    HapticFeedback.lightImpact();
+    _toggleCamera();
   }
 }

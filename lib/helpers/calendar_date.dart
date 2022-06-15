@@ -2,50 +2,101 @@ import 'package:flutter/material.dart';
 import 'package:hangr/helpers/outfit.dart';
 
 class CalendarDate extends StatefulWidget {
-  static final _today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   final DateTime _date;
-  late final Outfit? _outfit;
+  final Outfit? _outfit;
 
-  CalendarDate(this._date, {Key? key}) : super(key: key);
+  CalendarDate(this._date, this._outfit);
 
   @override
   State<CalendarDate> createState() => _CalendarDateState();
 }
 
 class _CalendarDateState extends State<CalendarDate> {
+  static final _today =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  static const _dayToString = {
+    1: "MON",
+    2: "TUE",
+    3: "WED",
+    4: "THU",
+    5: "FRI",
+    6: "SAT",
+    7: "SUN"
+  };
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-        height: 100,
-        decoration: BoxDecoration(
-            border: Border(
-                top: BorderSide(
-                    color: Theme.of(context).colorScheme.secondary))),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _getContents(context)));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(50)),
+                border: Border.all(
+                    color: Theme.of(context).colorScheme.secondary, width: 5)),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: _getContents(context))),
+      ),
+    );
   }
 
   List<Widget> _getContents(BuildContext context) {
     final List<Widget> list = [];
 
+    list.add(Spacer(
+      flex: 2,
+    ));
+
     list.add(
-      Padding(
-          padding: EdgeInsets.all(5),
-          child: Text(widget._date.day.toString(),
-              style: TextStyle(
-                  color: widget._date.isBefore(CalendarDate._today)
-                      ? Theme.of(context).colorScheme.onSecondary
-                      : null))),
+      Text(_dayToString[widget._date.weekday]!,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.tertiary,
+              fontSize: 40,
+              fontWeight: FontWeight.bold)),
     );
 
-    if (widget._outfit != null) {
-      list.add(Icon(
-        Icons.check_circle_rounded,
-        color: Theme.of(context).colorScheme.tertiary,
+    list.add(Text(widget._date.day.toString(),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: widget._date.isBefore(_today)
+              ? Theme.of(context).colorScheme.onSecondary
+              : Theme.of(context).colorScheme.onPrimary,
+          fontSize: 200,
+        )));
+
+    if (widget._outfit != null && widget._date.isBefore(_today)) {
+      list.add(IconButton(
+          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+          onPressed: () {},
+          icon: Icon(
+            Icons.remove_red_eye_outlined,
+            color: Colors.white,
+            size: 50,
+          )));
+    } else if (!widget._date.isBefore(_today)) {
+      list.add(Container(
+        decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Theme.of(context).colorScheme.tertiary),
+        child: IconButton(
+          padding: EdgeInsets.fromLTRB(2, 0, 0, 0),
+          onPressed: () {},
+          icon: Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: Colors.white,
+            size: 25,
+          ),
+        ),
       ));
     }
+
+    list.add(Spacer(
+      flex: 2,
+    ));
 
     return list;
   }

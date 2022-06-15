@@ -1,22 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:hangr/helpers/calendar_map.dart';
+import 'package:hangr/helpers/camera.dart';
+import 'package:hangr/helpers/outfit.dart';
+import 'package:hangr/helpers/wearable.dart';
 import 'package:hangr/pages/home_calendar.dart';
 import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../themes.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  final List<Outfit>? outfits;
+  final List<Wearable>? wearables;
+  final CalendarMap? calendarMap;
+  final Camera camera;
+
+  const Home(
+      {Key? key,
+      required this.outfits,
+      required this.wearables,
+      required this.camera,
+      required this.calendarMap})
+      : super(key: key);
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  Map _data = {};
-  ThemeData _theme = ThemeData.light();
-  TabController? _controller;
-  bool _isTransparent = false;
-
   static const _tabs = [
     Padding(
       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
@@ -29,68 +42,76 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     )
   ];
 
+  ThemeData _theme = AppTheme.light;
+  late final TabController _controller;
+
+  bool _isTransparent = false;
+
   @override
   void initState() {
     _controller =
-        new TabController(length: _tabs.length, vsync: this, initialIndex: 1);
+        new TabController(length: _tabs.length, vsync: this, initialIndex: 1)
+          ..addListener(() {
+            setState(
+                () => _isTransparent = (_controller.index == 0) ? true : false);
+          });
     super.initState();
   }
 
   @override
   void dispose() {
-    _controller!.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    _data = ModalRoute.of(context)!.settings.arguments as Map;
     _theme = Theme.of(context);
     timeDilation = 0.25;
 
-    _controller!.addListener(() {
-      setState(() {
-        _isTransparent = _controller!.index == 0 ? true : false;
-      });
-    });
-
-    return Scaffold(
-      body: TabBarView(
-        controller: _controller,
-        physics:
-            (_controller!.index == 1) ? NeverScrollableScrollPhysics() : null,
-        children: [
-          HomeCamera(cameras: _data['camera']),
-          HomeCalendar(),
-          HomeWardrobe(),
-        ],
+    return MultiProvider(
+      providers: [
+        Provider.value(
+          value: null,
+        ),
+        Provider(create: (context) => null),
+        Provider(create: (context) => null)
+      ],
+      child: Scaffold(
+        body: TabBarView(
+          controller: _controller,
+          physics:
+              (_controller.index == 1) ? NeverScrollableScrollPhysics() : null,
+          children: [
+            HomeCamera(cameras: widget.camera),
+            HomeCalendar(),
+            HomeWardrobe(),
+          ],
+        ),
+        bottomNavigationBar: _isTransparent
+            ? Container(width: 0, height: 0)
+            : TabBar(
+                onTap: (index) => HapticFeedback.mediumImpact(),
+                enableFeedback: true,
+                isScrollable: false,
+                controller: _controller,
+                tabs: _tabs,
+                indicatorWeight: 3,
+                labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+                indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
+                labelColor: _isTransparent
+                    ? Colors.transparent
+                    : _theme.colorScheme.tertiary,
+                unselectedLabelColor: _isTransparent
+                    ? Colors.transparent
+                    : _theme.colorScheme.onSecondary,
+                overlayColor: null,
+                indicatorSize: TabBarIndicatorSize.label,
+                indicatorColor: _isTransparent
+                    ? Colors.transparent
+                    : Theme.of(context).colorScheme.tertiary,
+              ),
       ),
-      bottomNavigationBar: _isTransparent
-          ? Container(width: 0, height: 0)
-          : TabBar(
-              onTap: (int index) {
-                HapticFeedback.mediumImpact();
-              },
-              enableFeedback: true,
-              isScrollable: false,
-              controller: _controller,
-              tabs: _tabs,
-              indicatorWeight: 3,
-              labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-              indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
-              labelColor: _isTransparent
-                  ? Colors.transparent
-                  : _theme.colorScheme.tertiary,
-              unselectedLabelColor: _isTransparent
-                  ? Colors.transparent
-                  : _theme.colorScheme.onSecondary,
-              overlayColor: null,
-              indicatorSize: TabBarIndicatorSize.label,
-              indicatorColor: _isTransparent
-                  ? Colors.transparent
-                  : _theme.colorScheme.tertiary,
-            ),
-      extendBody: true,
     );
   }
 }

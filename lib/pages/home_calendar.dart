@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hangr/helpers/calendar_builder.dart';
 import 'package:indexed_list_view/indexed_list_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import 'package:hangr/helpers/calendar_date.dart';
 
 class HomeCalendar extends StatefulWidget {
   const HomeCalendar({Key? key}) : super(key: key);
@@ -11,93 +11,127 @@ class HomeCalendar extends StatefulWidget {
 }
 
 class _HomeCalendarState extends State<HomeCalendar> {
-  static final _today = DateTime.now();
-  static final _firstDay = DateTime(1900);
-  static final _startingIndex =
-      (_today.difference(_firstDay).inDays ~/ 365) * 12;
-  static const appBarTextStyle =
-      TextStyle(fontSize: 10, fontWeight: FontWeight.bold);
+  static final _today =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  late final IndexedScrollController _controller;
 
-  static const calendarBuilder = CalendarBuilder();
+  DateTime _currentDate = _today;
+  bool _visible = true;
 
-  late int _currentPage;
-  late DateTime _currentDate;
-  late final PageController _pageController;
-
-  navigateToPage(int index) {
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.ease,
-    );
-  }
-
-  getCurrentPage(int page) {
-    int currYear = _currentDate.year;
-    int currMonth = _currentDate.month;
-
-    if (_currentPage - page < 1) {
-      _currentDate = DateTime(currYear, currMonth + 1);
-    } else {
-      _currentDate = DateTime(currYear, currMonth - 1);
-    }
-    _currentPage = page;
-  }
-
-  Widget getPage(DateTime date) {
-    return calendarBuilder.build(date);
-  }
+  static const _monthToString = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December",
+  };
 
   @override
   void initState() {
-    _currentPage = 0;
-    _currentDate = _today;
-    _pageController = PageController(initialPage: _startingIndex);
-    _currentPage = _startingIndex;
+    _controller =
+        IndexedScrollController(initialIndex: 0, initialScrollOffset: -200);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        bottom: PreferredSize(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
-              child: _daysOfWeek,
-            ),
-            preferredSize: Size.zero),
+    return NotificationListener(
+      child: Scaffold(
+        appBar: _appBar,
+        body: _body,
+        extendBodyBehindAppBar: true,
       ),
-      body: Center(
-        child: Container(
-          color: Theme.of(context).colorScheme.primary,
-          child: PageView.builder(
-            scrollDirection: Axis.vertical,
-            controller: _pageController,
-            allowImplicitScrolling: true,
-            onPageChanged: getCurrentPage,
-            itemBuilder: (context, _index) {
-              int currYear = _currentDate.year;
-              int monthDiff = _currentDate.month + _currentPage - _index;
-              return getPage(DateTime(currYear, monthDiff));
-            },
-          ),
-        ),
-      ),
+      onNotification: _onNotification,
     );
   }
 
-  Widget get _daysOfWeek => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const <Text>[
-            Text("S", style: appBarTextStyle),
-            Text("M", style: appBarTextStyle),
-            Text("T", style: appBarTextStyle),
-            Text("W", style: appBarTextStyle),
-            Text("T", style: appBarTextStyle),
-            Text("F", style: appBarTextStyle),
-            Text("S", style: appBarTextStyle)
-          ]);
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  PreferredSizeWidget get _appBar => PreferredSize(
+        preferredSize: Size.fromHeight(56),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 1000),
+          opacity: _visible ? 1 : 0,
+          child: AppBar(
+            elevation: 0,
+            titleSpacing: 0,
+            centerTitle: true,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Spacer(
+                  flex: 3,
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    _monthToString[_currentDate.month]! +
+                        " " +
+                        _currentDate.year.toString(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    maxLines: 2,
+                  ),
+                ),
+                Spacer(
+                  flex: 2,
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.settings,
+                    size: 30,
+                  ),
+                  padding: EdgeInsets.all(0),
+                )
+              ],
+            ),
+            backgroundColor:
+                Theme.of(context).colorScheme.secondary.withAlpha(200),
+          ),
+        ),
+      );
+
+  Widget get _body => IndexedListView.separated(
+        controller: _controller,
+        itemBuilder: (context, index) {
+          return VisibilityDetector(
+              key: Key(index.toString()),
+              onVisibilityChanged: (VisibilityInfo info) {
+                if (info.visibleFraction == 1)
+                  setState(() {
+                    _currentDate =
+                        DateTime(_today.year, _today.month, _today.day + index);
+                  });
+              },
+              child: CalendarDate(
+                  DateTime(_today.year, _today.month, _today.day + index),
+                  null));
+        },
+        separatorBuilder: (BuildContext context, int index) => SizedBox(
+          height: 50,
+        ),
+      );
+
+  bool _onNotification(Object? notificationInfo) {
+    setState(() {
+      if (notificationInfo is ScrollStartNotification) {
+        _visible = false;
+      } else if (notificationInfo is ScrollEndNotification) {
+        _visible = true;
+      }
+    });
+    return true;
+  }
 }
