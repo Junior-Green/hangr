@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hangr/helpers/outfit.dart';
+import 'package:hangr/services/outfit.dart';
 
 class CalendarDate extends StatefulWidget {
   final DateTime _date;
   final Outfit? _outfit;
 
-  CalendarDate(this._date, this._outfit);
+  const CalendarDate(this._date, this._outfit);
 
   @override
   State<CalendarDate> createState() => _CalendarDateState();
@@ -32,13 +32,12 @@ class _CalendarDateState extends State<CalendarDate> {
         aspectRatio: 1,
         child: Container(
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(50)),
+                borderRadius: const BorderRadius.all(Radius.circular(50)),
                 border: Border.all(
-                    color: Theme.of(context).colorScheme.secondary, width: 5)),
+                    color: Theme.of(context).colorScheme.secondary, width: 5,),),
             child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: _getContents(context))),
+                children: _getContents(context),),),
       ),
     );
   }
@@ -46,9 +45,9 @@ class _CalendarDateState extends State<CalendarDate> {
   List<Widget> _getContents(BuildContext context) {
     final List<Widget> list = [];
 
-    list.add(Spacer(
+    list.add(const Spacer(
       flex: 2,
-    ));
+    ),);
 
     list.add(
       Text(_dayToString[widget._date.weekday]!,
@@ -56,7 +55,7 @@ class _CalendarDateState extends State<CalendarDate> {
           style: TextStyle(
               color: Theme.of(context).colorScheme.tertiary,
               fontSize: 40,
-              fontWeight: FontWeight.bold)),
+              fontWeight: FontWeight.bold,),),
     );
 
     list.add(Text(widget._date.day.toString(),
@@ -66,37 +65,37 @@ class _CalendarDateState extends State<CalendarDate> {
               ? Theme.of(context).colorScheme.onSecondary
               : Theme.of(context).colorScheme.onPrimary,
           fontSize: 200,
-        )));
+        ),),);
 
     if (widget._outfit != null && widget._date.isBefore(_today)) {
       list.add(IconButton(
-          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+          padding: EdgeInsets.zero,
           onPressed: () {},
-          icon: Icon(
+          icon: const Icon(
             Icons.remove_red_eye_outlined,
             color: Colors.white,
             size: 50,
-          )));
+          ),),);
     } else if (!widget._date.isBefore(_today)) {
       list.add(Container(
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Theme.of(context).colorScheme.tertiary),
+            color: Theme.of(context).colorScheme.tertiary,),
         child: IconButton(
-          padding: EdgeInsets.fromLTRB(2, 0, 0, 0),
+          padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
           onPressed: () {},
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_forward_ios_rounded,
             color: Colors.white,
             size: 25,
           ),
         ),
-      ));
+      ),);
     }
 
-    list.add(Spacer(
+    list.add(const Spacer(
       flex: 2,
-    ));
+    ),);
 
     return list;
   }

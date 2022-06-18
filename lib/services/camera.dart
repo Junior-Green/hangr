@@ -12,7 +12,7 @@ class Camera {
 
   bool setCamera(CameraLensDirection dir) {
     if (!_isCameraAvailiable()) return false;
-    for (var camera in _cameras) {
+    for (final camera in _cameras) {
       if (camera.lensDirection == dir) {
         _controller = CameraController(camera, _resolution);
         break;

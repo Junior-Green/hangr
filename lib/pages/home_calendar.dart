@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hangr/services/calendar_date.dart';
 import 'package:indexed_list_view/indexed_list_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:hangr/helpers/calendar_date.dart';
 
 class HomeCalendar extends StatefulWidget {
   const HomeCalendar({Key? key}) : super(key: key);
@@ -35,20 +35,19 @@ class _HomeCalendarState extends State<HomeCalendar> {
 
   @override
   void initState() {
-    _controller =
-        IndexedScrollController(initialIndex: 0, initialScrollOffset: -200);
+    _controller = IndexedScrollController(initialScrollOffset: -200);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return NotificationListener(
+      onNotification: _onNotification,
       child: Scaffold(
         appBar: _appBar,
         body: _body,
         extendBodyBehindAppBar: true,
       ),
-      onNotification: _onNotification,
     );
   }
 
@@ -59,7 +58,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
   }
 
   PreferredSizeWidget get _appBar => PreferredSize(
-        preferredSize: Size.fromHeight(56),
+        preferredSize: const Size.fromHeight(56),
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 1000),
           opacity: _visible ? 1 : 0,
@@ -70,30 +69,29 @@ class _HomeCalendarState extends State<HomeCalendar> {
             title: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Spacer(
+                const Spacer(
                   flex: 3,
                 ),
                 Expanded(
                   flex: 3,
                   child: Text(
-                    _monthToString[_currentDate.month]! +
-                        " " +
-                        _currentDate.year.toString(),
+                    "${_monthToString[_currentDate.month]!} ${_currentDate.year}",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18,),
                     maxLines: 2,
                   ),
                 ),
-                Spacer(
+                const Spacer(
                   flex: 2,
                 ),
                 IconButton(
                   onPressed: () {},
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.settings,
                     size: 30,
                   ),
-                  padding: EdgeInsets.all(0),
+                  padding: EdgeInsets.zero,
                 )
               ],
             ),
@@ -109,17 +107,18 @@ class _HomeCalendarState extends State<HomeCalendar> {
           return VisibilityDetector(
               key: Key(index.toString()),
               onVisibilityChanged: (VisibilityInfo info) {
-                if (info.visibleFraction == 1)
+                if (info.visibleFraction == 1) {
                   setState(() {
                     _currentDate =
                         DateTime(_today.year, _today.month, _today.day + index);
                   });
+                }
               },
               child: CalendarDate(
                   DateTime(_today.year, _today.month, _today.day + index),
-                  null));
+                  null,),);
         },
-        separatorBuilder: (BuildContext context, int index) => SizedBox(
+        separatorBuilder: (BuildContext context, int index) => const SizedBox(
           height: 50,
         ),
       );

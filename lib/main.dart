@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hangr/pages/loading_screen.dart';
-import 'package:hangr/themes.dart';
+import 'package:hangr/utility/themes.dart';
 
-main() => runApp(MaterialApp(
-        themeMode: ThemeMode.system,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
+void main() => runApp(
+      MaterialApp(
+        theme: lightTheme,
+        darkTheme: darkTheme,
         initialRoute: '/',
         routes: {
           '/': (context) => const Loading(),
-        }));
+        },
+      ),
+    );

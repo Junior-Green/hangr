@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'wearable.dart';
+part of '../services/wearable.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -23,9 +23,9 @@ Map<String, dynamic> _$WearableToJson(Wearable instance) => <String, dynamic>{
     };
 
 const _$WearableTypeEnumMap = {
-  WearableType.HEADWEAR: 'headwear',
-  WearableType.TOP: 'top',
-  WearableType.BOTTOM: 'bottom',
-  WearableType.FOOTWEAR: 'footwear',
-  WearableType.ACCESSORY: 'accessory',
+  WearableType.headwear: 'headwear',
+  WearableType.top: 'top',
+  WearableType.bottom: 'bottom',
+  WearableType.footwear: 'footwear',
+  WearableType.accessory: 'accessory',
 };

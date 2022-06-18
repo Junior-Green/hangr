@@ -1,21 +1,21 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'wearable.g.dart';
+part '../serializers/wearable.g.dart';
 
 enum WearableType {
   @JsonValue("headwear")
-  HEADWEAR,
+  headwear,
   @JsonValue("top")
-  TOP,
+  top,
   @JsonValue("bottom")
-  BOTTOM,
+  bottom,
   @JsonValue("footwear")
-  FOOTWEAR,
+  footwear,
   @JsonValue("accessory")
-  ACCESSORY
+  accessory,
 }
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Wearable {
   final WearableType type;
   final String name;
@@ -23,7 +23,7 @@ class Wearable {
   final String primaryColor;
   final String imagePath;
 
-  Wearable(this.type, this.brand, this.primaryColor, this.imagePath, this.name);
+  const Wearable(this.type, this.brand, this.primaryColor, this.imagePath, this.name);
 
   factory Wearable.fromJson(Map<String, dynamic> json) =>
       _$WearableFromJson(json);

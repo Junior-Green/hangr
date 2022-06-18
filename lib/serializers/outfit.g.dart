@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'outfit.dart';
+part of '../services/outfit.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
@@ -13,12 +13,12 @@ Outfit _$OutfitFromJson(Map<String, dynamic> json) => Outfit(
 
 Map<String, dynamic> _$OutfitToJson(Outfit instance) => <String, dynamic>{
       'type': _$OutfitTypeEnumMap[instance.type],
-      'wearables': instance.wearables,
+      'wearables': instance.wearableIds,
     };
 
 const _$OutfitTypeEnumMap = {
-  OutfitType.CASUAL: 'casual',
-  OutfitType.FORMAL: 'formal',
-  OutfitType.SPORTS: 'sports',
-  OutfitType.BUSINESS: 'business',
+  OutfitType.casual: 'casual',
+  OutfitType.formal: 'formal',
+  OutfitType.sports: 'sports',
+  OutfitType.business: 'business',
 };

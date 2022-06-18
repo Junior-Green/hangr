@@ -1,24 +1,24 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'outfit.g.dart';
+part '../serializers/outfit.g.dart';
 
 enum OutfitType {
   @JsonValue("casual")
-  CASUAL,
+  casual,
   @JsonValue("formal")
-  FORMAL,
+  formal,
   @JsonValue("sports")
-  SPORTS,
+  sports,
   @JsonValue("business")
-  BUSINESS
+  business
 }
 
 @JsonSerializable(explicitToJson: true)
 class Outfit {
   final OutfitType type;
-  final List<String> wearables;
+  final List<String> wearableIds;
 
-  Outfit(this.wearables, this.type);
+  const Outfit(this.wearableIds, this.type);
 
   factory Outfit.fromJson(Map<String, dynamic> json) => _$OutfitFromJson(json);
   Map<String, dynamic> toJson() => _$OutfitToJson(this);

@@ -10,7 +10,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Color.fromARGB(255, 26, 193, 60),
+      color: const Color.fromARGB(255, 26, 193, 60),
     );
   }
 }

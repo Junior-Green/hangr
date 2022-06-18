@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:hangr/helpers/calendar_map.dart';
-import 'package:hangr/helpers/camera.dart';
-import 'package:hangr/helpers/outfit.dart';
-import 'package:hangr/helpers/wearable.dart';
+import 'package:flutter/services.dart';
 import 'package:hangr/pages/home_calendar.dart';
 import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
-import 'package:flutter/services.dart';
+import 'package:hangr/services/calendar_map.dart';
+import 'package:hangr/services/camera.dart';
+import 'package:hangr/services/outfit.dart';
+import 'package:hangr/services/wearable.dart';
 import 'package:provider/provider.dart';
-
-import '../themes.dart';
 
 class Home extends StatefulWidget {
   final List<Outfit>? outfits;
@@ -18,13 +16,13 @@ class Home extends StatefulWidget {
   final CalendarMap? calendarMap;
   final Camera camera;
 
-  const Home(
-      {Key? key,
-      required this.outfits,
-      required this.wearables,
-      required this.camera,
-      required this.calendarMap})
-      : super(key: key);
+  const Home({
+    Key? key,
+    required this.outfits,
+    required this.wearables,
+    required this.camera,
+    required this.calendarMap,
+  }) : super(key: key);
   @override
   State<Home> createState() => _HomeState();
 }
@@ -32,17 +30,17 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   static const _tabs = [
     Padding(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-      child: const Tab(icon: Icon(Icons.add_a_photo_rounded, size: 30)),
+      padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: Tab(icon: Icon(Icons.add_a_photo_rounded, size: 30)),
     ),
-    const Tab(icon: Icon(Icons.calendar_month_rounded, size: 50)),
+    Tab(icon: Icon(Icons.calendar_month_rounded, size: 50)),
     Padding(
-      padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-      child: const Tab(icon: Icon(Icons.inventory, size: 30)),
+      padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+      child: Tab(icon: Icon(Icons.inventory, size: 30)),
     )
   ];
 
-  ThemeData _theme = AppTheme.light;
+  ThemeData _theme = ThemeData.light();
   late final TabController _controller;
 
   bool _isTransparent = false;
@@ -50,10 +48,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   @override
   void initState() {
     _controller =
-        new TabController(length: _tabs.length, vsync: this, initialIndex: 1)
+        TabController(length: _tabs.length, vsync: this, initialIndex: 1)
           ..addListener(() {
             setState(
-                () => _isTransparent = (_controller.index == 0) ? true : false);
+              () => _isTransparent = _controller.index == 0,
+            );
           });
     super.initState();
   }
@@ -81,19 +80,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         body: TabBarView(
           controller: _controller,
           physics:
-              (_controller.index == 1) ? NeverScrollableScrollPhysics() : null,
+              (_controller.index == 1) ? const NeverScrollableScrollPhysics() : null,
           children: [
             HomeCamera(cameras: widget.camera),
-            HomeCalendar(),
+            const HomeCalendar(),
             HomeWardrobe(),
           ],
         ),
         bottomNavigationBar: _isTransparent
-            ? Container(width: 0, height: 0)
+            ? const SizedBox(width: 0, height: 0)
             : TabBar(
                 onTap: (index) => HapticFeedback.mediumImpact(),
                 enableFeedback: true,
-                isScrollable: false,
                 controller: _controller,
                 tabs: _tabs,
                 indicatorWeight: 3,
@@ -105,7 +103,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 unselectedLabelColor: _isTransparent
                     ? Colors.transparent
                     : _theme.colorScheme.onSecondary,
-                overlayColor: null,
                 indicatorSize: TabBarIndicatorSize.label,
                 indicatorColor: _isTransparent
                     ? Colors.transparent

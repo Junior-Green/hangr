@@ -1,16 +1,13 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:flutter/material.dart';
-import 'package:hangr/helpers/camera.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hangr/pages/home.dart';
-import 'package:path_provider/path_provider.dart';
-
-import '../helpers/calendar_map.dart';
-import '../helpers/outfit.dart';
-import '../helpers/wearable.dart';
+import 'package:hangr/services/calendar_map.dart';
+import 'package:hangr/services/camera.dart';
+import 'package:hangr/services/outfit.dart';
+import 'package:hangr/services/wearable.dart';
+import 'package:hangr/utility/file_handler.dart';
 
 class Loading extends StatefulWidget {
   const Loading({Key? key}) : super(key: key);
@@ -20,42 +17,18 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
-  void getData() async {
-    const outfitsPath = 'outfits.json';
-    const wearablesPath = 'wearables.json';
-    const calendarMapPath = 'calendar_map.json';
-
+  Future<void> getData() async {
     try {
-      List<Outfit>? outfits;
-      List<Wearable>? wearables;
-      CalendarMap? calendarMap;
-
       final Camera camera = Camera(await availableCameras());
-      await camera.setCamera(CameraLensDirection.back);
+      camera.setCamera(CameraLensDirection.back);
       await camera.initCamera();
 
-      final localDir = await getApplicationDocumentsDirectory();
-      final path = localDir.path;
+      final FileHandler handler = FileHandler();
+      final CalendarMap? calendarMap = await handler.readCalendarMap();
+      final List<Outfit>? outfits = await handler.readOutfits();
+      final List<Wearable>? wearables = await handler.readWearables();
 
-      if (await File('$path/$outfitsPath').exists()) {
-        await File('$path/$outfitsPath').readAsString().then((contents) {
-          Iterable l = jsonDecode(contents);
-          outfits = List<Outfit>.from(l.map((model) => Outfit.fromJson(model)));
-        });
-      }
-      if (await File('$path/$wearablesPath').exists()) {
-        await File('$path/$wearablesPath').readAsString().then((contents) {
-          Iterable l = jsonDecode(contents);
-          wearables =
-              List<Wearable>.from(l.map((model) => Wearable.fromJson(model)));
-        });
-      }
-
-      if (await File('$path/$calendarMapPath').exists()) {
-        await File('$path/$calendarMapPath').readAsString().then((contents) =>
-            calendarMap = CalendarMap.fromJson(json.decode(contents)));
-      }
-
+      if(!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -64,10 +37,12 @@ class _LoadingState extends State<Loading> {
                   wearables: wearables,
                   calendarMap: calendarMap,
                   outfits: outfits,
-                )),
+                ),),
       );
     } on Exception catch (e) {
-      print(e);
+      if (kDebugMode) {
+        print(e);
+      }
     }
   }
 
@@ -84,6 +59,6 @@ class _LoadingState extends State<Loading> {
             child: SpinKitFoldingCube(
       color: Theme.of(context).colorScheme.primary,
       size: 90.0,
-    )));
+    ),),);
   }
 }
