@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/outfit.dart';
+import 'package:provider/provider.dart';
 
 class CalendarDate extends StatefulWidget {
   final DateTime _date;
-  final Outfit? _outfit;
-
-  const CalendarDate(this._date, this._outfit);
+  const CalendarDate(this._date);
 
   @override
   State<CalendarDate> createState() => _CalendarDateState();
@@ -67,7 +67,10 @@ class _CalendarDateState extends State<CalendarDate> {
           fontSize: 200,
         ),),);
 
-    if (widget._outfit != null && widget._date.isBefore(_today)) {
+    final CalendarMap? map = context.read<CalendarMap?>();
+    final Outfit? outfit  = map?.getFromDate(widget._date);
+
+    if (outfit != null && widget._date.isBefore(_today)) {
       list.add(IconButton(
           padding: EdgeInsets.zero,
           onPressed: () {},

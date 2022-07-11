@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hangr/pages/add_wearable.dart';
 import 'package:hangr/services/camera.dart';
 
 class HomeCamera extends StatefulWidget {
@@ -21,10 +21,8 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
   static const _minZoomLevel = 1.0;
   static const _previewAspectRatio = 2 / 3;
   static const _cameraButton = "assets/images/camera_button.png";
-  static const _shutterSound = "camera_shutter.wav";
 
   late CameraController? _camera;
-  late final AudioCache _audioCache;
   late final AnimationController _toggleAnimation;
   late final AnimationController _cameraAnimation;
 
@@ -40,7 +38,6 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
   void initState() {
     _camera = widget.cameras.controller;
     _initAnimations();
-    _initAudioCache();
     super.initState();
   }
 
@@ -58,13 +55,14 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
   }
 
   Widget get _errorScreen => const Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Text(
-          _errorMessage,
-          style: TextStyle(color: Colors.white),
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            _errorMessage,
+            style: TextStyle(color: Colors.white),
+          ),
         ),
-      ),);
+      );
 
   Widget get _cameraScreen => Scaffold(
         extendBody: true,
@@ -75,11 +73,13 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
             child: Column(
               children: [
                 GestureDetector(
-                    onScaleStart: (details) => _baseScaleFactor = _scaleFactor,
-                    onScaleUpdate: (details) => _setZoom,
-                    child: AspectRatio(
-                        aspectRatio: _previewAspectRatio,
-                        child: CameraPreview(_camera!),),),
+                  onScaleStart: (details) => _baseScaleFactor = _scaleFactor,
+                  onScaleUpdate: (details) => _setZoom,
+                  child: AspectRatio(
+                    aspectRatio: _previewAspectRatio,
+                    child: CameraPreview(_camera!),
+                  ),
+                ),
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -89,31 +89,33 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
                         child: GestureDetector(
                           onTap: _takePicture,
                           child: Transform.scale(
-                              scale: _cameraScale,
-                              child:
-                                  Image.asset(_cameraButton),),
+                            scale: _cameraScale,
+                            child: Image.asset(_cameraButton),
+                          ),
                         ),
                       ),
                       Expanded(
-                          child: GestureDetector(
-                        onTap: _switchLens,
-                        child: Transform.scale(
-                          scale: _toggleScale,
-                          child: Container(
-                            decoration: BoxDecoration(
+                        child: GestureDetector(
+                          onTap: _switchLens,
+                          child: Transform.scale(
+                            scale: _toggleScale,
+                            child: Container(
+                              decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.tertiary,
-                                shape: BoxShape.circle,),
-                            child: const Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Icon(
-                                Icons.threesixty_rounded,
-                                color: Colors.white,
-                                size: 30,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(
+                                  Icons.threesixty_rounded,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),)
+                      )
                     ],
                   ),
                 )
@@ -127,44 +129,62 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
   Widget _dialogBuilder(BuildContext context) => AlertDialog(
         contentPadding: const EdgeInsets.fromLTRB(30, 15, 30, 10),
         shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(15)),),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
+          borderRadius: BorderRadius.all(Radius.circular(15)),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
         backgroundColor: Theme.of(context).colorScheme.secondary,
         title: const Center(
-            child: Text(
-          "Use Image?",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),),
+          child: Text(
+            "Use Image?",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
         content: Image.file(File(_imagePath)),
         actions: [
-          TextButton(
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true).pop('dialog'),
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: Text("Cancel",
-                    style: TextStyle(color: Colors.red, fontSize: 18),),
-              ),),
-          TextButton(
-              onPressed: () =>
-                  Navigator.of(context, rootNavigator: true).pop('dialog'),
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-                child: Text("Use",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                        fontSize: 18,),),
-              ),),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () =>
+                      Navigator.of(context, rootNavigator: true).pop('dialog'),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.red, fontSize: 18),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddWearable(_imagePath),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    "Use",
+                    // ignore: unnecessary_const
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       );
 
   void _initAnimations() {
     _toggleAnimation = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 200),
-        upperBound: 0.1,)
-      ..addListener(() {
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      upperBound: 0.1,
+    )..addListener(() {
         setState(() {
           if (_toggleAnimation.isCompleted) {
             _toggleAnimation.reverse();
@@ -173,26 +193,16 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
       });
 
     _cameraAnimation = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 200),
-        upperBound: 0.05,)
-      ..addListener(() {
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+      upperBound: 0.05,
+    )..addListener(() {
         setState(() {
           if (_cameraAnimation.isCompleted) {
             _cameraAnimation.reverse();
           }
         });
       });
-  }
-
-  void _initAudioCache() {
-    _audioCache = AudioCache(
-      respectSilence: true,
-      prefix: 'assets/audio/',
-      fixedPlayer: AudioPlayer()..setReleaseMode(ReleaseMode.STOP),
-    );
-
-    _audioCache.load(_shutterSound);
   }
 
   void _setAnimationScale() {
@@ -226,7 +236,6 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
         setState(() {
           _isPressed = true;
         });
-        _audioCache.play(_shutterSound);
         _cameraAnimation.forward();
         HapticFeedback.mediumImpact();
 
@@ -234,9 +243,10 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
         _imagePath = image.path;
 
         showDialog(
-            context: context,
-            builder: _dialogBuilder,
-            barrierDismissible: false,);
+          context: context,
+          builder: _dialogBuilder,
+          barrierDismissible: false,
+        );
 
         setState(() {
           _isPressed = false;

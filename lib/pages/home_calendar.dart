@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hangr/services/calendar_date.dart';
+import 'package:hangr/widgets/calendar_date.dart';
 import 'package:indexed_list_view/indexed_list_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -78,7 +78,9 @@ class _HomeCalendarState extends State<HomeCalendar> {
                     "${_monthToString[_currentDate.month]!} ${_currentDate.year}",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 18,),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                     maxLines: 2,
                   ),
                 ),
@@ -105,18 +107,19 @@ class _HomeCalendarState extends State<HomeCalendar> {
         controller: _controller,
         itemBuilder: (context, index) {
           return VisibilityDetector(
-              key: Key(index.toString()),
-              onVisibilityChanged: (VisibilityInfo info) {
-                if (info.visibleFraction == 1) {
-                  setState(() {
-                    _currentDate =
-                        DateTime(_today.year, _today.month, _today.day + index);
-                  });
-                }
-              },
-              child: CalendarDate(
-                  DateTime(_today.year, _today.month, _today.day + index),
-                  null,),);
+            key: Key(index.toString()),
+            onVisibilityChanged: (VisibilityInfo info) {
+              if (info.visibleFraction == 1) {
+                setState(() {
+                  _currentDate =
+                      DateTime(_today.year, _today.month, _today.day + index);
+                });
+              }
+            },
+            child: CalendarDate(
+              DateTime(_today.year, _today.month, _today.day + index),
+            ),
+          );
         },
         separatorBuilder: (BuildContext context, int index) => const SizedBox(
           height: 50,
