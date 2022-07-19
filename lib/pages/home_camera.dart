@@ -156,7 +156,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
               Expanded(
                 child: TextButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => AddWearable(_imagePath),

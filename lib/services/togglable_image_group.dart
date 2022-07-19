@@ -24,7 +24,7 @@ class ToggableImageGroup {
   bool isSelected() => _selectedIndex != -1;
   Widget? getSelectedImage() => isSelected() ? _images[_selectedIndex] : null;
   void _buttonToggled(int index) {
-    _selectedIndex = _images[index].isToggled ? index : -1;
+    _selectedIndex = _images[index].isToggled ? -1 : index;
     for (var i = 0; i < _images.length; i++) {
       if (_images[i].isToggled && index != i) {
         _images[i].toggle();

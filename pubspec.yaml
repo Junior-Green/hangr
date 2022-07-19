@@ -27,11 +27,13 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  audioplayers: ^1.0.1
   camera:
   cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
   flutter_spinkit: ^5.1.0
+  flutter_typeahead: ^4.0.0
   indexed_list_view: ^2.0.2
   json_annotation: ^4.5.0
   path:

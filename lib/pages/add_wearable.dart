@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:hangr/services/togglable_image_group.dart';
 import 'package:hangr/services/wearable.dart';
@@ -20,6 +22,7 @@ class _AddWearableState extends State<AddWearable>
   late final TabController _controller;
   late final TextEditingController _nameEditingController;
   late final TextEditingController _brandEditingController;
+  late final TextEditingController _colorEditingController;
   late final List<ToggableImage> _images;
   late final ToggableImageGroup _group;
   List<String> brands = [];
@@ -31,13 +34,33 @@ class _AddWearableState extends State<AddWearable>
     _controller = TabController(length: _tabs.length, vsync: this)
       ..addListener(
         () => setState(() {
-          if (_controller.index == 1) {
-            _canScroll = _group.getSelectedImage() != null;
+          FocusScope.of(context).unfocus();
+          switch (_controller.index) {
+            case 0:
+              _canScroll =
+                  _nameEditingController.text.replaceAll(' ', '') != '';
+              break;
+            case 1:
+              _canScroll = _group.isSelected();
+              break;
+            case 2:
+              _canScroll =
+                  _brandEditingController.text.replaceAll(' ', '') != '';
+              break;
+            case 3:
+              _canScroll =
+                  _colorEditingController.text.replaceAll(' ', '') != '';
+              break;
+            default:
+              _canScroll = false;
+              break;
           }
         }),
       );
     _nameEditingController = TextEditingController();
     _brandEditingController = TextEditingController();
+    _colorEditingController = TextEditingController();
+
     _initImages();
     _getAutoCompleteQueries();
     super.initState();
@@ -53,13 +76,40 @@ class _AddWearableState extends State<AddWearable>
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: () {
-          FocusManager.instance.primaryFocus?.unfocus();
-          setState(() {
+        onTapDown: (details) => Future.delayed(
+          const Duration(milliseconds: 100),
+          () => setState(() {
             if (_controller.index == 1) {
               _canScroll = _group.getSelectedImage() != null;
             }
-          });
+          }),
+        ),
+        onTapUp: (details) => Future.delayed(
+          const Duration(milliseconds: 100),
+          () => setState(() {
+            if (_controller.index == 1) {
+              _canScroll = _group.getSelectedImage() != null;
+            }
+          }),
+        ),
+        onTapCancel: () => Future.delayed(
+          const Duration(milliseconds: 100),
+          () => setState(() {
+            if (_controller.index == 1) {
+              _canScroll = _group.getSelectedImage() != null;
+            }
+          }),
+        ),
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          Future.delayed(
+            const Duration(milliseconds: 100),
+            () => setState(() {
+              if (_controller.index == 1) {
+                _canScroll = _group.getSelectedImage() != null;
+              }
+            }),
+          );
         },
         child: Scaffold(
           body: Center(
@@ -111,6 +161,7 @@ class _AddWearableState extends State<AddWearable>
         const Tab(icon: Icon(Icons.circle, size: 15)),
         const Tab(icon: Icon(Icons.circle, size: 15)),
         const Tab(icon: Icon(Icons.circle, size: 15)),
+        const Tab(icon: Icon(Icons.check_rounded, size: 25)),
       ];
 
   List<Widget> get _inputFields => [
@@ -130,15 +181,13 @@ class _AddWearableState extends State<AddWearable>
                       ? 'name most contain at least 1 letter'
                       : null;
                 },
-                onChanged: (text) => setState(() {
-                  text = text.replaceAll(' ', '');
-                  _canScroll = text.isNotEmpty;
-                }),
+                onChanged: (text) =>
+                    setState(() => _canScroll = text.replaceAll(' ', '') != ''),
                 decoration: InputDecoration(
-                    errorText: _canScroll ? "" : "empty field",
-                    labelText: "name",
-                    hintText: 'enter name'),
-                keyboardType: TextInputType.name,
+                  errorText: _canScroll ? "" : "empty field",
+                  labelText: "name",
+                  hintText: 'enter name',
+                ),
                 controller: _nameEditingController,
                 maxLengthEnforcement: MaxLengthEnforcement.enforced,
                 style: const TextStyle(fontSize: 35),
@@ -157,29 +206,105 @@ class _AddWearableState extends State<AddWearable>
             children: _group.toggableImages,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Center(
-            child: TextField(
-              keyboardType: TextInputType.name,
-              onChanged: (text) => setState(() {
-                _canScroll = text != "";
-              }),
-              decoration: const InputDecoration(
-                hintText: 'enter brand',
-                labelText: "brand",
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Theme(
+              data: textFieldTheme,
+              child: TypeAheadField<String>(
+                direction: AxisDirection.up,
+                hideOnLoading: true,
+                hideOnEmpty: true,
+                suggestionsBoxDecoration: const SuggestionsBoxDecoration(
+                  elevation: 0.0,
+                  hasScrollbar: false,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                  ),
+                ),
+                suggestionsBoxVerticalOffset: 10,
+                textFieldConfiguration: TextFieldConfiguration(
+                  controller: _brandEditingController,
+                  onChanged: (text) => setState(
+                    () => _canScroll = text.replaceAll(' ', '') != '',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 25),
+                  maxLength: 30,
+                  cursorColor: Theme.of(context).colorScheme.onPrimary,
+                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "brand",
+                    hintText: 'enter brand',
+                  ),
+                ),
+                suggestionsCallback: (input) => _getBrands(input),
+                itemBuilder: (context, suggestion) => ListTile(
+                  title: Text(
+                    suggestion,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                onSuggestionSelected: (suggestion) =>
+                    _brandEditingController.text = suggestion,
               ),
-              controller: _brandEditingController,
-              maxLengthEnforcement: MaxLengthEnforcement.enforced,
-              style: const TextStyle(fontSize: 35),
-              autofillHints: brands,
-              textCapitalization: TextCapitalization.sentences,
-              cursorColor: Theme.of(context).colorScheme.onPrimary,
-              textAlign: TextAlign.center,
             ),
           ),
         ),
-        const Center(child: TextField())
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Theme(
+              data: textFieldTheme,
+              child: TypeAheadField<String>(
+                direction: AxisDirection.up,
+                hideOnLoading: true,
+                hideOnEmpty: true,
+                suggestionsBoxDecoration: const SuggestionsBoxDecoration(
+                  elevation: 0.0,
+                  hasScrollbar: false,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                  ),
+                ),
+                suggestionsBoxVerticalOffset: 10,
+                textFieldConfiguration: TextFieldConfiguration(
+                  controller: _colorEditingController,
+                  onChanged: (text) => setState(
+                    () => _canScroll = text.replaceAll(' ', '') != '',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 25),
+                  maxLength: 30,
+                  cursorColor: Theme.of(context).colorScheme.onPrimary,
+                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "primary color",
+                    hintText: 'enter color',
+                  ),
+                ),
+                suggestionsCallback: (input) => _getColors(input),
+                itemBuilder: (context, suggestion) => ListTile(
+                  title: Text(
+                    suggestion,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                onSuggestionSelected: (suggestion) =>
+                    _colorEditingController.text = suggestion,
+              ),
+            ),
+          ),
+        ),
+        const Center(
+          child: Text(
+            "You're Good to Go !",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+            textAlign: TextAlign.center,
+          ),
+        )
       ];
 
   void _initImages() {
@@ -211,6 +336,16 @@ class _AddWearableState extends State<AddWearable>
   ThemeData get textFieldTheme => Theme.of(context).copyWith(
         hintColor: Theme.of(context).colorScheme.onSecondary,
         inputDecorationTheme: InputDecorationTheme(
+          enabledBorder: OutlineInputBorder(
+            borderSide:
+                BorderSide(color: Theme.of(context).colorScheme.tertiary),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.tertiary, width: 3),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
           errorBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: _canScroll
@@ -242,7 +377,7 @@ class _AddWearableState extends State<AddWearable>
       await DefaultAssetBundle.of(context)
           .loadString('assets/data/brands.json'),
     ) as List<dynamic>;
-
+    if (!mounted) return;
     final colorsJson = json.decode(
       await DefaultAssetBundle.of(context)
           .loadString('assets/data/colors.json'),
@@ -252,5 +387,31 @@ class _AddWearableState extends State<AddWearable>
       brands = List<String>.from(brandsJson.map((e) => e.toString()));
       colors = List<String>.from(colorsJson.map((e) => e.toString()));
     });
+  }
+
+  List<String> _getBrands(String input) {
+    final allSuggestions = brands
+        .where((brand) => brand.toLowerCase().contains(input.toLowerCase()))
+        .toList();
+
+    return input.replaceAll(' ', '') != ''
+        ? allSuggestions.sublist(
+            0,
+            allSuggestions.length <= 5 ? allSuggestions.length : 5,
+          )
+        : [];
+  }
+
+  List<String> _getColors(String input) {
+    final allSuggestions = colors
+        .where((color) => color.toLowerCase().contains(input.toLowerCase()))
+        .toList();
+
+    return input.replaceAll(' ', '') != ''
+        ? allSuggestions.sublist(
+            0,
+            allSuggestions.length <= 5 ? allSuggestions.length : 5,
+          )
+        : [];
   }
 }

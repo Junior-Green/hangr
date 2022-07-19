@@ -19,7 +19,6 @@ class ToggableImage extends StatefulWidget {
 
   // ignore: avoid_dynamic_calls, prefer_null_aware_method_calls
   void toggle() => _toggled.value = !_toggled.value;
-
   void onTap() => _onTap != null ? _onTap!() : null;
 
   bool get isToggled => _toggled.value;
