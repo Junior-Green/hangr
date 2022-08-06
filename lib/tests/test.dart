@@ -2,10 +2,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:hangr/services/calendar_map.dart';
+import 'package:hangr/services/file_handler.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/tests/test_helper.dart';
-import 'package:hangr/services/file_handler.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -7,6 +7,7 @@ part of '../services/wearable.dart';
 // **************************************************************************
 
 Wearable _$WearableFromJson(Map<String, dynamic> json) => Wearable(
+      json['id'] as String,
       $enumDecode(_$WearableTypeEnumMap, json['type']),
       json['brand'] as String,
       json['primaryColor'] as String,
@@ -15,6 +16,7 @@ Wearable _$WearableFromJson(Map<String, dynamic> json) => Wearable(
     );
 
 Map<String, dynamic> _$WearableToJson(Wearable instance) => <String, dynamic>{
+      'id': instance.id,
       'type': _$WearableTypeEnumMap[instance.type],
       'name': instance.name,
       'brand': instance.brand,

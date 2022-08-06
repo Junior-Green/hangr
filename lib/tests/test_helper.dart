@@ -4,6 +4,7 @@ import 'package:hangr/services/wearable.dart';
 
 List<Wearable> getListWearable() {
   const wearable1 = Wearable(
+    '342gw',
     WearableType.headwear,
     "Nike",
     "blue",
@@ -11,6 +12,7 @@ List<Wearable> getListWearable() {
     "track pants",
   );
   const wearable2 = Wearable(
+    '34qfw2gw',
     WearableType.footwear,
     "Puma",
     "black",
@@ -18,6 +20,7 @@ List<Wearable> getListWearable() {
     "running shoes",
   );
   const wearable3 = Wearable(
+    '342wqfgw',
     WearableType.accessory,
     "Gucci",
     "brown",

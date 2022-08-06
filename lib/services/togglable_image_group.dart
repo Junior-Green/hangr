@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:hangr/widgets/toggable_image.dart';
 
 class ToggableImageGroup {
@@ -22,7 +21,8 @@ class ToggableImageGroup {
   }
 
   bool isSelected() => _selectedIndex != -1;
-  Widget? getSelectedImage() => isSelected() ? _images[_selectedIndex] : null;
+  ToggableImage? getSelectedImage() =>
+      isSelected() ? _images[_selectedIndex] : null;
   void _buttonToggled(int index) {
     _selectedIndex = _images[index].isToggled ? -1 : index;
     for (var i = 0; i < _images.length; i++) {

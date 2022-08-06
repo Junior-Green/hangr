@@ -18,12 +18,20 @@ enum WearableType {
 @JsonSerializable(explicitToJson: true)
 class Wearable {
   final WearableType type;
+  final String id;
   final String name;
   final String brand;
   final String primaryColor;
   final String imagePath;
 
-  const Wearable(this.type, this.brand, this.primaryColor, this.imagePath, this.name);
+  const Wearable(
+    this.id,
+    this.type,
+    this.brand,
+    this.primaryColor,
+    this.imagePath,
+    this.name,
+  );
 
   factory Wearable.fromJson(Map<String, dynamic> json) =>
       _$WearableFromJson(json);

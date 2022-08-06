@@ -1,11 +1,9 @@
 import 'dart:io';
-import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hangr/pages/home.dart';
 import 'package:hangr/services/calendar_map.dart';
-import 'package:hangr/services/camera.dart';
 import 'package:hangr/services/file_handler.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/wearable.dart';
@@ -40,10 +38,6 @@ class _LoadingState extends State<Loading> {
 
   Future<void> initData() async {
     try {
-      final Camera camera = Camera(await availableCameras());
-      camera.setCamera(CameraLensDirection.back);
-      await camera.initCamera();
-
       final Directory directory = await getApplicationDocumentsDirectory();
       final FileHandler handler = FileHandler(directory.path);
       final CalendarMap calendarMap = await handler.readCalendarMap();
@@ -60,9 +54,7 @@ class _LoadingState extends State<Loading> {
               Provider.value(value: wearables),
               Provider.value(value: outfits),
             ],
-            child: Home(
-              camera: camera,
-            ),
+            builder: (context, widget) => const Home(),
           ),
         ),
       );

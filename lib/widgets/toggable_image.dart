@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 // ignore: must_be_immutable
 class ToggableImage extends StatefulWidget {
@@ -16,9 +14,8 @@ class ToggableImage extends StatefulWidget {
     this._label = "",
     this._onTap,
   ]);
-
-  // ignore: avoid_dynamic_calls, prefer_null_aware_method_calls
   void toggle() => _toggled.value = !_toggled.value;
+  // ignore: avoid_dynamic_calls, prefer_null_aware_method_calls
   void onTap() => _onTap != null ? _onTap!() : null;
 
   bool get isToggled => _toggled.value;

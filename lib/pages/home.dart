@@ -1,35 +1,25 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:hangr/pages/add_wearable.dart';
 import 'package:hangr/pages/home_calendar.dart';
 import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
-import 'package:hangr/services/camera.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
-  final Camera camera;
-
-  const Home({Key? key, required this.camera}) : super(key: key);
+  const Home({Key? key}) : super(key: key);
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  ThemeData _theme = ThemeData.light();
   late final TabController _controller;
-
-  bool _isTransparent = false;
+  final ValueNotifier<bool> _isVisible = ValueNotifier(true);
 
   @override
   void initState() {
     _controller =
-        TabController(length: _tabs.length, vsync: this, initialIndex: 1)
-          ..addListener(() {
-            setState(
-              () => _isTransparent = _controller.index == 0,
-            );
-          });
+        TabController(length: _tabs.length, vsync: this, initialIndex: 1);
     super.initState();
   }
 
@@ -40,56 +30,76 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) {
-    _theme = Theme.of(context);
-    timeDilation = 0.25;
-
-    return Scaffold(
-      body: TabBarView(
-        controller: _controller,
-        physics: (_controller.index == 1)
-            ? const NeverScrollableScrollPhysics()
-            : null,
-        children: [
-          const AddWearable(""), //FIXME revert debugging changes when done
-          //HomeCamera(cameras: widget.camera),
-          const HomeCalendar(),
-          HomeWardrobe(),
-        ],
-      ),
-      bottomNavigationBar: _isTransparent
-          ? const SizedBox(width: 0, height: 0)
-          : TabBar(
-              onTap: (index) => HapticFeedback.mediumImpact(),
-              enableFeedback: true,
-              controller: _controller,
-              tabs: _tabs,
-              indicatorWeight: 3,
-              labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-              indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
-              labelColor: _isTransparent
-                  ? Colors.transparent
-                  : _theme.colorScheme.tertiary,
-              unselectedLabelColor: _isTransparent
-                  ? Colors.transparent
-                  : _theme.colorScheme.onSecondary,
-              indicatorSize: TabBarIndicatorSize.label,
-              indicatorColor: _isTransparent
-                  ? Colors.transparent
-                  : Theme.of(context).colorScheme.tertiary,
+  Widget build(BuildContext context) => Scaffold(
+        body: TabBarView(
+          controller: _controller,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            HomeCamera(_controller),
+            ListenableProvider.value(
+              value: _isVisible,
+              child: const HomeCalendar(),
             ),
-    );
-  }
+            HomeWardrobe(),
+          ],
+        ),
+        bottomNavigationBar: ValueListenableBuilder<bool>(
+          builder: (BuildContext context, value, Widget? child) =>
+              AnimatedOpacity(
+            duration: const Duration(milliseconds: 250),
+            opacity: value ? 1 : 0,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+              ),
+              child: ColoredBox(
+                color: Theme.of(context).colorScheme.primary,
+                child: TabBar(
+                  onTap: (index) {
+                    if ((_controller.indexIsChanging &&
+                            _controller.previousIndex == 0) ||
+                        _controller.index == 0) {
+                      _controller.index = 0;
+                    } else {
+                      HapticFeedback.mediumImpact();
+                    }
+                  },
+                  enableFeedback: true,
+                  controller: _controller,
+                  tabs: _tabs,
+                  indicatorWeight: 3,
+                  labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+                  indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
+                  labelColor: Theme.of(context).colorScheme.tertiary,
+                  unselectedLabelColor:
+                      Theme.of(context).colorScheme.onSecondary,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  indicatorColor: Theme.of(context).colorScheme.tertiary,
+                ),
+              ),
+            ),
+          ),
+          valueListenable: _isVisible,
+        ),
+        extendBody: true,
+      );
 
   List<Widget> get _tabs => [
         const Padding(
           padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-          child: Tab(icon: Icon(Icons.add_a_photo_rounded, size: 30)),
+          child: Tab(icon: Icon(CupertinoIcons.camera_fill, size: 25)),
         ),
-        const Tab(icon: Icon(Icons.calendar_month_rounded, size: 50)),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
+          child: Tab(icon: Icon(CupertinoIcons.calendar, size: 50)),
+        ),
         const Padding(
           padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-          child: Tab(icon: Icon(Icons.inventory, size: 30)),
+          child: Tab(icon: Icon(CupertinoIcons.bag_fill, size: 25)),
         )
       ];
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 final darkTheme = ThemeData(
@@ -12,6 +13,9 @@ final darkTheme = ThemeData(
     secondary: Colors.grey[900]!,
     onSecondary: const Color.fromARGB(128, 214, 214, 214),
     tertiary: const Color.fromARGB(255, 210, 3, 79),
+  ),
+  cupertinoOverrideTheme: const CupertinoThemeData(
+    primaryColor: Color.fromARGB(255, 210, 3, 79),
   ),
   textTheme: Typography.whiteCupertino,
   textSelectionTheme: const TextSelectionThemeData(
@@ -45,6 +49,9 @@ final lightTheme = ThemeData(
   errorColor: Colors.red,
   splashColor: Colors.transparent,
   highlightColor: Colors.transparent,
+  cupertinoOverrideTheme: const CupertinoThemeData(
+    primaryColor: Color.fromARGB(255, 210, 3, 79),
+  ),
   colorScheme: ColorScheme.dark(
     primary: Colors.white,
     secondary: Colors.grey[300]!,
@@ -73,7 +80,7 @@ final lightTheme = ThemeData(
     labelStyle: const TextStyle(
       fontWeight: FontWeight.bold,
       fontSize: 20,
-      color: Color.fromARGB(128, 214, 214, 214),
+      color: Color.fromARGB(128, 180, 180, 180),
     ),
     floatingLabelAlignment: FloatingLabelAlignment.center,
   ),
