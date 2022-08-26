@@ -19,10 +19,14 @@ class CustomIcons {
   CustomIcons._();
 
   static const _kFontFam = 'CustomIcons';
+  static const _kFontFam2 = 'CustomIcons2';
 
   static const IconData accessory = IconData(0xe800, fontFamily: _kFontFam);
   static const IconData bottom = IconData(0xe801, fontFamily: _kFontFam);
   static const IconData footwear = IconData(0xe802, fontFamily: _kFontFam);
   static const IconData headwear = IconData(0xe803, fontFamily: _kFontFam);
   static const IconData top = IconData(0xe804, fontFamily: _kFontFam);
+  static const IconData athletic = IconData(0xe800, fontFamily: _kFontFam2);
+  static const IconData business = IconData(0xe801, fontFamily: _kFontFam2);
+  static const IconData formal = IconData(0xe802, fontFamily: _kFontFam2);
 }

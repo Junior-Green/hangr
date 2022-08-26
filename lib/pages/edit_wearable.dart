@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,19 +7,17 @@ import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:hangr/services/togglable_image_group.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/toggable_image.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 
-class AddWearable extends StatefulWidget {
-  final Uint8List _image;
-  const AddWearable(this._image);
+class EditWearable extends StatefulWidget {
+  final Wearable _wearable;
+  const EditWearable(this._wearable);
 
   @override
-  State<AddWearable> createState() => _AddWearableState();
+  State<EditWearable> createState() => _EditWearableState();
 }
 
-class _AddWearableState extends State<AddWearable>
+class _EditWearableState extends State<EditWearable>
     with TickerProviderStateMixin {
   static const _aspectRatio = 3 / 4;
   late final TabController _controller;
@@ -32,7 +29,7 @@ class _AddWearableState extends State<AddWearable>
   late final AudioPlayer _player;
   List<String> brands = [];
   List<String> colors = [];
-  bool _canScroll = false;
+  bool _canScroll = true;
 
   @override
   void initState() {
@@ -43,7 +40,6 @@ class _AddWearableState extends State<AddWearable>
         () {
           setState(() {
             FocusScope.of(context).unfocus();
-            _checkValidity();
             if (_controller.index == 4) {
               _finalize();
             }
@@ -66,51 +62,45 @@ class _AddWearableState extends State<AddWearable>
   }
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-        child: Scaffold(
-          body: Center(
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: SafeArea(
-                    bottom: false,
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                      child: AspectRatio(
-                        aspectRatio: _aspectRatio,
-                        child: Image.memory(
-                          widget._image,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+          child: Column(
+            children: [
+              Expanded(
+                flex: 3,
+                child: SafeArea(
+                  bottom: false,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                    child: AspectRatio(
+                      aspectRatio: _aspectRatio,
+                      child: Image.file(File(widget._wearable.imagePath)),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: TabBarView(
-                    physics: _canScroll
-                        ? null
-                        : const NeverScrollableScrollPhysics(),
-                    controller: _controller,
-                    children: _inputFields,
-                  ),
-                )
-              ],
-            ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  physics:
+                      _canScroll ? null : const NeverScrollableScrollPhysics(),
+                  controller: _controller,
+                  children: _inputFields,
+                ),
+              )
+            ],
           ),
-          bottomNavigationBar: IgnorePointer(
-            child: TabBar(
-              padding: const EdgeInsets.symmetric(horizontal: 100),
-              enableFeedback: true,
-              controller: _controller,
-              tabs: _tabs,
-              indicatorWeight: 1,
-              indicatorColor: Colors.transparent,
-              labelColor: Theme.of(context).colorScheme.tertiary,
-              unselectedLabelColor: Theme.of(context).colorScheme.onSecondary,
-              labelPadding: const EdgeInsets.only(bottom: 15),
-            ),
+        ),
+        bottomNavigationBar: IgnorePointer(
+          child: TabBar(
+            padding: const EdgeInsets.symmetric(horizontal: 100),
+            enableFeedback: true,
+            controller: _controller,
+            tabs: _tabs,
+            indicatorWeight: 1,
+            indicatorColor: Colors.transparent,
+            labelColor: Theme.of(context).colorScheme.tertiary,
+            unselectedLabelColor: Theme.of(context).colorScheme.onSecondary,
+            labelPadding: const EdgeInsets.only(bottom: 15),
           ),
         ),
       );
@@ -133,19 +123,20 @@ class _AddWearableState extends State<AddWearable>
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (value) {
                   if (value == null) {
-                    return 'empty field';
+                    return '';
                   }
-                  value = value.replaceAll(' ', '');
-                  return value.isEmpty
+                  final check = value.replaceAll(' ', '');
+                  return check.isEmpty && value.isNotEmpty
                       ? 'name most contain at least 1 letter'
                       : null;
                 },
-                onChanged: (text) =>
-                    setState(() => _canScroll = text.replaceAll(' ', '') != ''),
+                onChanged: (text) => setState(
+                  () => _canScroll =
+                      text.replaceAll(' ', '') != '' && text.isNotEmpty,
+                ),
                 decoration: InputDecoration(
-                  errorText: _canScroll ? "" : "empty field",
                   labelText: "name",
-                  hintText: 'enter name',
+                  hintText: widget._wearable.name,
                   floatingLabelAlignment: FloatingLabelAlignment.center,
                   floatingLabelBehavior: FloatingLabelBehavior.always,
                 ),
@@ -187,17 +178,18 @@ class _AddWearableState extends State<AddWearable>
                 textFieldConfiguration: TextFieldConfiguration(
                   controller: _brandEditingController,
                   onChanged: (text) => setState(
-                    () => _canScroll = text.replaceAll(' ', '') != '',
+                    () => _canScroll =
+                        text.replaceAll(' ', '') != '' && text.isNotEmpty,
                   ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 25),
                   maxLength: 30,
                   cursorColor: Theme.of(context).colorScheme.onPrimary,
                   maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
                     labelText: "brand",
-                    hintText: 'enter brand',
+                    hintText: widget._wearable.brand,
                     floatingLabelAlignment: FloatingLabelAlignment.center,
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),
@@ -235,17 +227,18 @@ class _AddWearableState extends State<AddWearable>
                 textFieldConfiguration: TextFieldConfiguration(
                   controller: _colorEditingController,
                   onChanged: (text) => setState(
-                    () => _canScroll = text.replaceAll(' ', '') != '',
+                    () => _canScroll =
+                        text.replaceAll(' ', '') != '' && text.isNotEmpty,
                   ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 25),
                   maxLength: 30,
                   cursorColor: Theme.of(context).colorScheme.onPrimary,
                   maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
                     labelText: "primary color",
-                    hintText: 'enter color',
+                    hintText: widget._wearable.primaryColor,
                     floatingLabelAlignment: FloatingLabelAlignment.center,
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),
@@ -273,12 +266,16 @@ class _AddWearableState extends State<AddWearable>
       ];
 
   Future<void> _finalize() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final dirPath = dir.path;
-    const generator = Uuid();
-    final generatedId = generator.v1();
-    final imagePath = '$dirPath/$generatedId.jpg';
     final wearableType = _getWearableType();
+    final newName = _nameEditingController.text.isNotEmpty
+        ? _nameEditingController.text
+        : widget._wearable.name;
+    final newBrand = _brandEditingController.text.isNotEmpty
+        ? _brandEditingController.text
+        : widget._wearable.brand;
+    final newColor = _colorEditingController.text.isNotEmpty
+        ? _colorEditingController.text
+        : widget._wearable.primaryColor;
 
     if (wearableType == null) {
       await _dialog();
@@ -286,18 +283,19 @@ class _AddWearableState extends State<AddWearable>
       Navigator.pop(context, false);
     }
     final newWearable = Wearable(
-      generatedId,
+      widget._wearable.id,
       wearableType!,
-      _brandEditingController.text,
-      _colorEditingController.text,
-      imagePath,
-      _nameEditingController.text,
-      DateTime.now(),
+      newBrand,
+      newColor,
+      widget._wearable.imagePath,
+      newName,
+      widget._wearable.timeTaken,
     );
     if (!mounted) return;
 
-    context.read<MyWearables>().addWearable(newWearable);
-    await File(imagePath).writeAsBytes(widget._image);
+    context.read<MyWearables>()
+      ..removeWearable(widget._wearable)
+      ..addWearable(newWearable);
 
     await _player.play(
       AssetSource('audio/clothing_creation_sfx.mp3'),
@@ -314,11 +312,16 @@ class _AddWearableState extends State<AddWearable>
   }
 
   void _initImages() {
+    int currIndex = 0;
+    int selected = -1;
     _images = List<ToggableImage>.from(
       WearableType.values.map(
         (type) {
+          if (type == widget._wearable.type) {
+            selected = currIndex;
+          }
           final val = type.toString().substring(13);
-
+          currIndex++;
           return ToggableImage(
             Image.asset(
               "assets/images/${val}_filled.png",
@@ -336,8 +339,11 @@ class _AddWearableState extends State<AddWearable>
       ),
       growable: false,
     );
-    _group = ToggableImageGroup(_images)
-      ..addListener(() => setState(() => _checkValidity()));
+    print(selected);
+    _group = ToggableImageGroup(_images, selected)
+      ..addListener(
+        () => setState(() => _canScroll = _group.getSelectedImage() != null),
+      );
   }
 
   ThemeData get textFieldTheme => Theme.of(context).copyWith(
@@ -380,26 +386,6 @@ class _AddWearableState extends State<AddWearable>
           floatingLabelAlignment: FloatingLabelAlignment.center,
         ),
       );
-
-  void _checkValidity() {
-    switch (_controller.index) {
-      case 0:
-        _canScroll = _nameEditingController.text.replaceAll(' ', '') != '';
-        break;
-      case 1:
-        _canScroll = _group.getSelectedImage() != null;
-        break;
-      case 2:
-        _canScroll = _brandEditingController.text.replaceAll(' ', '') != '';
-        break;
-      case 3:
-        _canScroll = _colorEditingController.text.replaceAll(' ', '') != '';
-        break;
-      default:
-        _canScroll = false;
-        break;
-    }
-  }
 
   Future<void> _getAutoCompleteQueries() async {
     final brandsJson = json.decode(
@@ -450,7 +436,6 @@ class _AddWearableState extends State<AddWearable>
     _controller.dispose();
     _nameEditingController.dispose();
     _brandEditingController.dispose();
-    _group.dispose();
   }
 
   WearableType? _getWearableType() {

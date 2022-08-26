@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string></string>
+	<string>Allow this app to access the device camera to take and store photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>

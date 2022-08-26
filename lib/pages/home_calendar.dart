@@ -63,7 +63,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 250),
           opacity: context.watch<ValueNotifier<bool>>().value ? 1 : 0,
-          child: Container(
+          child: ColoredBox(
             color: Theme.of(context).colorScheme.secondary.withAlpha(150),
             child: ClipRect(
               child: BackdropFilter(

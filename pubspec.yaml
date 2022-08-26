@@ -31,15 +31,20 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
+  flutter_picker: ^2.0.5
   flutter_spinkit: ^5.1.0
   flutter_typeahead: ^4.0.0
+  focused_menu: ^1.0.5
   image_cropper: ^2.0.3
   image_picker: ^0.8.5+3
   indexed_list_view: ^2.0.2
+  intl: ^0.17.0
   json_annotation: ^4.5.0
+  multi_select_flutter: ^4.1.2
   path:
   path_provider:
   provider: ^6.0.2
+  share_plus: ^4.0.10+1
   shared_preferences: ^2.0.15
   test: ^1.21.1
   uuid: ^3.0.6
@@ -114,3 +119,6 @@ flutter:
       - family: CustomIcons
         fonts:
           - asset: fonts/CustomIcons.ttf
+      - family: CustomIcons2
+        fonts:
+          - asset: fonts/CustomIcons2.ttf

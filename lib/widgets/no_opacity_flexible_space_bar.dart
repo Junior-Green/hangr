@@ -254,7 +254,7 @@ class _NoOpacityFlexibleSpaceBarState extends State<NoOpacityFlexibleSpaceBar> {
                     sigmaX: blurAmount,
                     sigmaY: blurAmount,
                   ),
-                  child: Container(
+                  child: const ColoredBox(
                     color: Colors.transparent,
                   ),
                 ),

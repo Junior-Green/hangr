@@ -6,6 +6,7 @@ final darkTheme = ThemeData(
   scaffoldBackgroundColor: Colors.black,
   splashColor: Colors.transparent,
   errorColor: Colors.red,
+  
   highlightColor: Colors.transparent,
   colorScheme: ColorScheme.dark(
     primary: Colors.black,

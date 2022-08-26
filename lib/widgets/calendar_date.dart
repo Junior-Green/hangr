@@ -30,7 +30,7 @@ class _CalendarDateState extends State<CalendarDate> {
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
       child: AspectRatio(
         aspectRatio: 1,
-        child: Container(
+        child: DecoratedBox(
             decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(Radius.circular(50)),
                 border: Border.all(
@@ -80,7 +80,7 @@ class _CalendarDateState extends State<CalendarDate> {
             size: 50,
           ),),);
     } else if (!widget._date.isBefore(_today)) {
-      list.add(Container(
+      list.add(DecoratedBox(
         decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Theme.of(context).colorScheme.tertiary,),

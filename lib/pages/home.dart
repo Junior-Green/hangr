@@ -40,7 +40,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               value: _isVisible,
               child: const HomeCalendar(),
             ),
-            HomeWardrobe(),
+            HomeWardrobe(homeTabController: _controller,),
           ],
         ),
         bottomNavigationBar: ValueListenableBuilder<bool>(
@@ -48,7 +48,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               AnimatedOpacity(
             duration: const Duration(milliseconds: 250),
             opacity: value ? 1 : 0,
-            child: Container(
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(

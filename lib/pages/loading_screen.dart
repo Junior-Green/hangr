@@ -10,14 +10,14 @@ import 'package:hangr/services/wearable.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-class Loading extends StatefulWidget {
-  const Loading({Key? key}) : super(key: key);
+class LoadingScreen extends StatefulWidget {
+  const LoadingScreen({Key? key}) : super(key: key);
 
   @override
-  _LoadingState createState() => _LoadingState();
+  _LoadingScreenState createState() => _LoadingScreenState();
 }
 
-class _LoadingState extends State<Loading> {
+class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
@@ -42,7 +42,7 @@ class _LoadingState extends State<Loading> {
       final FileHandler handler = FileHandler(directory.path);
       final CalendarMap calendarMap = await handler.readCalendarMap();
       final List<Outfit> outfits = await handler.readOutfits();
-      final List<Wearable> wearables = await handler.readWearables();
+      final MyWearables wearables = MyWearables(await handler.readWearables());
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -51,7 +51,7 @@ class _LoadingState extends State<Loading> {
           builder: (context) => MultiProvider(
             providers: [
               Provider.value(value: calendarMap),
-              Provider.value(value: wearables),
+              ChangeNotifierProvider.value(value: wearables),
               Provider.value(value: outfits),
             ],
             builder: (context, widget) => const Home(),

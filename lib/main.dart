@@ -10,7 +10,7 @@ void main() {
       darkTheme: darkTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => const Loading(),
+        '/': (context) => const LoadingScreen(),
       },
     ),
   );

@@ -40,12 +40,12 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
       widget._controller.animateTo(1);
       return;
     }
-    final wearables = context.read<List<Wearable>>();
+    final wearables = context.read<MyWearables>();
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) =>
-            Provider.value(value: wearables, child: AddWearable(croppedImage)),
+            ChangeNotifierProvider.value(value: wearables, child: AddWearable(croppedImage)),
       ),
     ).then((val) => widget._controller.animateTo(1));
   }
@@ -59,6 +59,7 @@ class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
       uiSettings: [
         IOSUiSettings(
           showCancelConfirmationDialog: true,
+          rotateButtonsHidden: true,
           aspectRatioLockEnabled: true,
           title: 'Crop Image',
         ),
