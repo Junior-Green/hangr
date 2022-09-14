@@ -1,20 +1,28 @@
 import 'dart:collection';
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:hangr/pages/add_outfit.dart';
+import 'package:hangr/pages/edit_outfit.dart';
 import 'package:hangr/pages/edit_wearable.dart';
 import 'package:hangr/services/custom_icons.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/no_opacity_flexible_space_bar.dart';
 import 'package:hangr/widgets/zoomable.dart';
+import 'package:hangr/widgets/zoomable_outfit.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-enum SortType { none, name, color, brand }
+enum WearbaleSortType { none, name, color, brand }
+
+enum WearableSortType { none, name, color, brand }
+
+enum OutfitSortType { none, name, primaryColor, secondaryColor }
 
 enum WardrobeMode { clothes, outfits }
 
@@ -32,11 +40,14 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   late final _outfits = Provider.of<MyOutfits>(context);
   late final TextEditingController _textController;
   late final FixedExtentScrollController _scrollController;
+
   final _wearableTypeFilters = HashSet<WearableType>();
-  final _wearableAttributeFilter = HashSet<String>();
+  final _outfitTypeFilters = HashSet<OutfitType>();
+  final _attributeFilters = HashSet<String>();
   final _mode = ValueNotifier<WardrobeMode>(WardrobeMode.clothes);
 
-  SortType _sortType = SortType.none;
+  WearableSortType _wearableSortType = WearableSortType.none;
+  OutfitSortType _outfitSortType = OutfitSortType.none;
   bool _sortDown = true;
 
   @override
@@ -56,14 +67,18 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   @override
   Widget build(BuildContext context) => Scaffold(
         body: SafeArea(
-          child: NestedScrollView(
-            headerSliverBuilder:
-                (BuildContext context, bool innerBoxScrolled) => <Widget>[
-              _createSilverAppBar1(),
-              _createSilverAppBar2(),
-              _createSliverGrid()
-            ],
-            body: Container(),
+          child: ValueListenableBuilder<WardrobeMode>(
+            builder: (BuildContext context, value, Widget? child) =>
+                NestedScrollView(
+              headerSliverBuilder:
+                  (BuildContext context, bool innerBoxScrolled) => <Widget>[
+                _createSilverAppBar1(),
+                _createSilverAppBar2(value),
+                _createSliverGrid(value)
+              ],
+              body: Container(),
+            ),
+            valueListenable: _mode,
           ),
         ),
       );
@@ -100,142 +115,145 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
       );
 
-  SliverAppBar _createSilverAppBar2() {
-    return SliverAppBar(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      pinned: true,
-      primary: false,
-      floating: true,
-      elevation: 0,
-      toolbarHeight: 160,
-      expandedHeight: 110,
-      flexibleSpace: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) =>
-            Container(
-          margin: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).colorScheme.secondary,
+  SliverAppBar _createSilverAppBar2(WardrobeMode mode) => SliverAppBar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        pinned: true,
+        primary: false,
+        floating: true,
+        elevation: 0,
+        toolbarHeight: 160,
+        expandedHeight: 110,
+        flexibleSpace: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) =>
+              Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
               ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                margin: const EdgeInsets.fromLTRB(0, 10, 0, 5),
-                constraints: const BoxConstraints.expand(
-                  height: 32,
-                  width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  margin: const EdgeInsets.fromLTRB(0, 10, 0, 5),
+                  constraints: const BoxConstraints.expand(
+                    height: 32,
+                    width: double.infinity,
+                  ),
+                  child: CupertinoSlidingSegmentedControl<WardrobeMode>(
+                    thumbColor: Theme.of(context).colorScheme.tertiary,
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    onValueChanged: (value) {
+                      _attributeFilters.clear();
+                      _mode.value = value!;
+                    },
+                    groupValue: mode,
+                    children: const <WardrobeMode, Widget>{
+                      WardrobeMode.clothes: Text('Clothes'),
+                      WardrobeMode.outfits: Text('Outfits')
+                    },
+                  ),
                 ),
-                child: CupertinoSlidingSegmentedControl<WardrobeMode>(
-                  thumbColor: Theme.of(context).colorScheme.tertiary,
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
-                  onValueChanged: (value) =>
-                      setState(() => _mode.value = value!),
-                  groupValue: _mode.value,
-                  children: const <WardrobeMode, Widget>{
-                    WardrobeMode.clothes: Text('Clothes'),
-                    WardrobeMode.outfits: Text('Outfits')
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: CupertinoSearchTextField(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.secondary,
-                        prefixIcon: Icon(
-                          CupertinoIcons.search,
-                          color: Theme.of(context).colorScheme.onSecondary,
-                        ),
-                        suffixIcon: Icon(
-                          CupertinoIcons.xmark_circle_fill,
-                          color: Theme.of(context).colorScheme.onSecondary,
-                        ),
-                        onChanged: (input) => setState(() {}),
-                        controller: _textController,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onLongPress: () => setState(() {
-                          _wearableAttributeFilter.clear();
-                          HapticFeedback.lightImpact();
-                        }),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => _showFilterPicker(context),
-                          icon: Icon(
-                            Icons.filter_alt_rounded,
-                            color: _wearableAttributeFilter.isEmpty
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.tertiary,
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: CupertinoSearchTextField(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary,
+                          prefixIcon: Icon(
+                            CupertinoIcons.search,
+                            color: Theme.of(context).colorScheme.onSecondary,
+                          ),
+                          suffixIcon: Icon(
+                            CupertinoIcons.xmark_circle_fill,
+                            color: Theme.of(context).colorScheme.onSecondary,
+                          ),
+                          onChanged: (input) => setState(() {}),
+                          controller: _textController,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onLongPress: () => setState(() {
-                          _sortDown = !_sortDown;
-                          HapticFeedback.lightImpact();
-                        }),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => _showSortPicker(context),
-                          icon: Icon(
-                            _sortDown
-                                ? CupertinoIcons.sort_down
-                                : CupertinoIcons.sort_up,
-                            color: _sortType == SortType.none
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.tertiary,
+                      Expanded(
+                        child: GestureDetector(
+                          onLongPress: () => setState(() {
+                            _attributeFilters.clear();
+                            HapticFeedback.lightImpact();
+                          }),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: () => _showFilterPicker(context),
+                            icon: Icon(
+                              Icons.filter_alt_rounded,
+                              color: _attributeFilters.isEmpty
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.tertiary,
+                            ),
                           ),
                         ),
                       ),
-                    )
-                  ],
+                      Expanded(
+                        child: GestureDetector(
+                          onLongPress: () => setState(() {
+                            _sortDown = !_sortDown;
+                            HapticFeedback.lightImpact();
+                          }),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: () => _showSortPicker(context),
+                            icon: Icon(
+                              _sortDown
+                                  ? CupertinoIcons.sort_down
+                                  : CupertinoIcons.sort_up,
+                              color: (mode == WardrobeMode.clothes &&
+                                          _wearableSortType ==
+                                              WearableSortType.none) ||
+                                      (mode == WardrobeMode.outfits &&
+                                          _outfitSortType ==
+                                              OutfitSortType.none)
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.tertiary,
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-              ),
-              ValueListenableBuilder<WardrobeMode>(
-                builder: (BuildContext context, value, Widget? child) =>
-                    Padding(
+                Padding(
                   padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     mainAxisSize: MainAxisSize.min,
-                    children: value == WardrobeMode.clothes
+                    children: mode == WardrobeMode.clothes
                         ? _clothesFilterButtons(context)
                         : _outfitsFilterButtons(context),
                   ),
                 ),
-                valueListenable: _mode,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 
-  SliverPadding _createSliverGrid() => SliverPadding(
-        padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+  SliverPadding _createSliverGrid(WardrobeMode mode) => SliverPadding(
+        padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
         sliver: SliverGrid.count(
           childAspectRatio: 3 / 4,
           mainAxisSpacing: 5,
           crossAxisSpacing: 5,
           crossAxisCount: 3,
-          children: List<Widget>.from(_getWearables())..add(_wardrobeAddHint),
+          children: List<Widget>.from(
+            mode == WardrobeMode.clothes ? _getWearables() : _getOutfits(),
+          )..add(_wardrobeAddHint()),
         ),
       );
 
@@ -348,11 +366,18 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
       ];
 
-  Widget get _wardrobeAddHint => GestureDetector(
+  Widget _wardrobeAddHint() => GestureDetector(
         onTap: () {
           if (_mode.value == WardrobeMode.clothes) {
             widget.homeTabController.animateTo(0);
-          } else {}
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddOutfit(_wearables, _outfits),
+              ),
+            );
+          }
         },
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -373,162 +398,196 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
       );
 
-  List<Zoomable> _getWearables() => List<ZoomableWearable>.from(
-        _wearables.getWearables
-            .where(
-              (element) =>
-                  (_wearableTypeFilters.isEmpty ||
-                      _wearableTypeFilters.contains(element.type)) &&
-                  (_textController.text.isEmpty ||
-                      element.name
-                          .toLowerCase()
-                          .contains(_textController.text.toLowerCase())) &&
-                  (_wearableAttributeFilter.isEmpty ||
-                      _wearableAttributeFilter
-                          .contains(element.brand.toLowerCase()) ||
-                      _wearableAttributeFilter
-                          .contains(element.brand.toLowerCase())),
-            )
-            .map(
-              (element) => ZoomableWearable(
-                  _getWearableMenuOptions(
-                    element,
-                    context.read<MyWearables>(),
-                  ),
-                  element),
-            )
-            .toList()
-          ..sort(_sorter),
-      );
+  List<Zoomable> _getWearables() {
+    final filteredList = _wearables.getWearables
+        .where(
+          (element) =>
+              (_wearableTypeFilters.isEmpty ||
+                  _wearableTypeFilters.contains(element.type)) &&
+              (_textController.text.isEmpty ||
+                  element.name
+                      .toLowerCase()
+                      .contains(_textController.text.toLowerCase())) &&
+              (_attributeFilters.isEmpty ||
+                  _attributeFilters.contains(element.brand.toLowerCase()) ||
+                  _attributeFilters
+                      .contains(element.primaryColor.toLowerCase())),
+        )
+        .toList()
+      ..sort(_wearableComparator);
 
-  List<ZoomableWearable> _getOutfits() => List<ZoomableWearable>.from(
-        _wearables.getWearables
-            .where(
-              (element) =>
-                  (_wearableTypeFilters.isEmpty ||
-                      _wearableTypeFilters.contains(element.type)) &&
-                  (_textController.text.isEmpty ||
-                      element.name
-                          .toLowerCase()
-                          .contains(_textController.text.toLowerCase())) &&
-                  (_wearableAttributeFilter.isEmpty ||
-                      _wearableAttributeFilter
-                          .contains(element.brand.toLowerCase()) ||
-                      _wearableAttributeFilter
-                          .contains(element.brand.toLowerCase())),
-            )
-            .map(
-              (element) => ZoomableWearable(
-                _getOutfitMenuOptions(
-                  element,
-                  _wearables,
-                ),
-                element,
-              ),
-            )
-            .toList()
-          ..sort(_sorter),
-      );
+    return filteredList
+        .map<ZoomableWearable>(
+          (wearable) => ZoomableWearable(
+            _getWearableMenuOptions(wearable, _wearables),
+            wearable,
+          ),
+        )
+        .toList();
+  }
+
+  List<Zoomable> _getOutfits() {
+    final filteredList = _outfits.getOutfits
+        .where(
+          (element) =>
+              (_outfitTypeFilters.isEmpty ||
+                  _outfitTypeFilters.contains(element.type)) &&
+              (_textController.text.isEmpty ||
+                  element.name
+                      .toLowerCase()
+                      .contains(_textController.text.toLowerCase())) &&
+              (_attributeFilters.isEmpty ||
+                  (_attributeFilters
+                          .contains(element.primaryColor.toLowerCase()) ||
+                      _attributeFilters.contains(
+                        element.secondaryColor.toLowerCase(),
+                      ))),
+        )
+        .toList()
+      ..sort(_outfitComparator);
+    return filteredList
+        .map(
+          (outfit) => ZoomableOutfit(
+            _getOutfitMenuOptions(outfit, _outfits),
+            outfit,
+          ),
+        )
+        .toList();
+  }
 
   Future<void> _showFilterPicker(BuildContext context) async {
     await showModalBottomSheet(
-      backgroundColor: Theme.of(context).colorScheme.secondary,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
       isScrollControlled: true, // required for min/max child size
       context: context,
       elevation: 0,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: MultiSelectBottomSheet<String>(
-          title: Text(
-            'Filters',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 25,
-              color: Theme.of(context).colorScheme.onPrimary,
+      builder: (context) => ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 20.0,
+            sigmaY: 10.0,
+          ),
+          child: ColoredBox(
+            color: Theme.of(context).colorScheme.secondary.withAlpha(175),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: MultiSelectBottomSheet<String>(
+                title: Text(
+                  'Filters',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                searchable: true,
+                selectedColor: Theme.of(context).colorScheme.tertiary,
+                unselectedColor: Theme.of(context).colorScheme.onSecondary,
+                selectedItemsTextStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                itemsTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                searchIcon: Icon(
+                  CupertinoIcons.search,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                closeSearchIcon: Icon(
+                  CupertinoIcons.xmark_circle_fill,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+                confirmText: const Text(
+                  'Confirm',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                cancelText: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Colors.red,
+                  ),
+                ),
+                items: _getFilterOptions(),
+                listType: MultiSelectListType.CHIP,
+                initialValue: const [],
+                onSelectionChanged: (filters) => setState(
+                  () => _attributeFilters
+                    ..clear()
+                    ..addAll(
+                      filters.toSet().map((e) => e.toLowerCase()).toList(),
+                    ),
+                ),
+                maxChildSize: 0.8,
+              ),
             ),
           ),
-          searchable: true,
-          selectedColor: Theme.of(context).colorScheme.tertiary,
-          unselectedColor: Theme.of(context).colorScheme.onSecondary,
-          selectedItemsTextStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          itemsTextStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          searchIcon: Icon(
-            CupertinoIcons.search,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          closeSearchIcon: Icon(
-            CupertinoIcons.xmark_circle_fill,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-          confirmText: const Text(
-            'Confirm',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-            ),
-          ),
-          cancelText: const Text(
-            'Cancel',
-            style: TextStyle(
-              color: Colors.red,
-            ),
-          ),
-          items: _wearables.getWearables
-              .map((element) => element.brand)
-              .followedBy(
-                _wearables.getWearables.map((element) => element.primaryColor),
-              )
-              .toSet()
-              .map((element) => MultiSelectItem(element, element))
-              .toList(),
-          listType: MultiSelectListType.CHIP,
-          initialValue: const [],
-          onSelectionChanged: (filters) => setState(
-            () => _wearableAttributeFilter
-              ..clear()
-              ..addAll(filters.toSet().map((e) => e.toLowerCase()).toList()),
-          ),
-          maxChildSize: 0.8,
         ),
       ),
     );
   }
 
+  List<MultiSelectItem<String>> _getFilterOptions() {
+    final filterSet = HashSet<String>();
+
+    if (_mode.value == WardrobeMode.clothes) {
+      for (final wearable in _wearables.getWearables) {
+        filterSet.addAll([wearable.brand, wearable.primaryColor]);
+      }
+    } else {
+      for (final outfit in _outfits.getOutfits) {
+        filterSet.addAll([outfit.primaryColor, outfit.secondaryColor]);
+      }
+    }
+
+    return filterSet
+        .map((element) => MultiSelectItem(element, element))
+        .toList();
+  }
+
   Future<void> _showSortPicker(BuildContext context) async {
-    await showCupertinoModalPopup(
+    await showModalBottomSheet(
       context: context,
-      builder: (context) => SizedBox(
-        height: 200,
-        child: CupertinoPicker(
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          scrollController:
-              FixedExtentScrollController(initialItem: _sortType.index),
-          magnification: 1.25,
-          useMagnifier: true,
-          itemExtent: 30,
-          onSelectedItemChanged: (index) => setState(() {
-            switch (index) {
-              case 0:
-                _sortType = SortType.none;
-                break;
-              case 1:
-                _sortType = SortType.name;
-                break;
-              case 2:
-                _sortType = SortType.color;
-                break;
-              case 3:
-                _sortType = SortType.brand;
-                break;
-              default:
-            }
-          }),
-          children: [
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
+      builder: (context) => ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 10.0),
+          child: SizedBox(
+            height: 200,
+            child: CupertinoPicker(
+              backgroundColor:
+                  Theme.of(context).colorScheme.secondary.withAlpha(200),
+              scrollController: FixedExtentScrollController(
+                initialItem: _mode.value == WardrobeMode.clothes
+                    ? _wearableSortType.index
+                    : _outfitSortType.index,
+              ),
+              magnification: 1.25,
+              useMagnifier: true,
+              itemExtent: 30,
+              onSelectedItemChanged: (index) => setState(
+                () => _mode.value == WardrobeMode.clothes
+                    ? _setWearableSortType(index)
+                    : _setOutfitSortType(index),
+              ),
+              children: _getSortPickerOptions(context),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _getSortPickerOptions(BuildContext context) {
+    return _mode.value == WardrobeMode.clothes
+        ? [
             Center(
               child: Text(
                 'None',
@@ -559,28 +618,78 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                 ),
               ),
             )
-          ],
-        ),
-      ),
-    );
+          ]
+        : [
+            Center(
+              child: Text(
+                'None',
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+              ),
+            ),
+            Center(
+              child: Text(
+                'Name',
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+              ),
+            ),
+            Center(
+              child: Text(
+                'Primary Color',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+            Center(
+              child: Text(
+                'Secondary Color',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ];
   }
 
-  int _sorter(ZoomableWearable a, ZoomableWearable b) {
-    switch (_sortType) {
-      case SortType.none:
+  int _wearableComparator(Wearable a, Wearable b) {
+    switch (_wearableSortType) {
+      case WearableSortType.none:
         return 0;
-      case SortType.name:
+      case WearableSortType.name:
         return _sortDown
-            ? a.wearable.name.compareTo(b.wearable.name)
-            : a.wearable.name.compareTo(b.wearable.name) * -1;
-      case SortType.brand:
+            ? a.name.compareTo(b.name)
+            : a.name.compareTo(b.name) * -1;
+      case WearableSortType.brand:
         return _sortDown
-            ? a.wearable.brand.compareTo(b.wearable.name)
-            : a.wearable.brand.compareTo(b.wearable.name) * -1;
-      case SortType.color:
+            ? a.brand.compareTo(b.name)
+            : a.brand.compareTo(b.name) * -1;
+      case WearableSortType.color:
         return _sortDown
-            ? a.wearable.primaryColor.compareTo(b.wearable.name)
-            : a.wearable.primaryColor.compareTo(b.wearable.name) * -1;
+            ? a.primaryColor.compareTo(b.primaryColor)
+            : a.primaryColor.compareTo(b.primaryColor) * -1;
+      default:
+        return 0;
+    }
+  }
+
+  int _outfitComparator(Outfit a, Outfit b) {
+    switch (_outfitSortType) {
+      case OutfitSortType.none:
+        return 0;
+      case OutfitSortType.name:
+        return _sortDown
+            ? a.name.compareTo(b.name)
+            : a.name.compareTo(b.name) * -1;
+      case OutfitSortType.primaryColor:
+        return _sortDown
+            ? a.primaryColor.compareTo(b.primaryColor)
+            : a.primaryColor.compareTo(b.primaryColor) * -1;
+      case OutfitSortType.secondaryColor:
+        return _sortDown
+            ? a.secondaryColor.compareTo(b.secondaryColor)
+            : a.secondaryColor.compareTo(b.secondaryColor) * -1;
       default:
         return 0;
     }
@@ -608,7 +717,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           () => Share.shareFiles(
             [w.imagePath],
             mimeTypes: ['images/jpg'],
-            subject: 'Check out ${_getSubjectSuffix(w)}',
+            subject: 'Check out ${_getWearableSubjectSuffix(w)}',
             text: 'Look at my ${w.name} I got from ${w.brand}.',
           ),
         ),
@@ -617,15 +726,33 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
       ];
 
+  // TODO: Finish implementation
   List<FocusedMenuItem> _getOutfitMenuOptions(
-    Wearable element,
-    MyWearables wearables,
+    Outfit outfit,
+    MyOutfits outfits,
   ) =>
       [
-        _createEditButton(() {}),
+        _createEditButton(
+          () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditOutfit(outfit, outfits),
+              ),
+            );
+          },
+        ),
+        _createShareButton(
+          () => Share.shareFiles(
+            [outfit.imagePath],
+            mimeTypes: ['images/jpg'],
+            subject: 'Check out ${_getOutfitSubjectSuffix(outfit)}',
+          ),
+        ),
+        _createDeleteButton(() => outfits.removeOutfit(outfit)),
       ];
 
-  String _getSubjectSuffix(Wearable w) {
+  String _getWearableSubjectSuffix(Wearable w) {
     switch (w.type) {
       case WearableType.accessory:
         return 'this piece of accessory!';
@@ -642,6 +769,21 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
     }
   }
 
+  String _getOutfitSubjectSuffix(Outfit outfit) {
+    switch (outfit.type) {
+      case OutfitType.business:
+        return 'my business outfit!';
+      case OutfitType.casual:
+        return 'my casual outfit!';
+      case OutfitType.formal:
+        return 'my formal outfit!';
+      case OutfitType.sports:
+        return 'my sports outfit';
+      default:
+        return 'my outfit!';
+    }
+  }
+
   FocusedMenuItem _createEditButton(Function onPressed) => FocusedMenuItem(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         title: Text(
@@ -653,6 +795,11 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           ),
         ),
         onPressed: onPressed,
+        trailingIcon: Icon(
+          CupertinoIcons.pen,
+          color: Theme.of(context).colorScheme.onPrimary,
+          size: 25,
+        ),
       );
 
   FocusedMenuItem _createShareButton(Function onPressed) => FocusedMenuItem(
@@ -665,6 +812,11 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           ),
         ),
         onPressed: onPressed,
+        trailingIcon: Icon(
+          CupertinoIcons.share_solid,
+          color: Theme.of(context).colorScheme.onPrimary,
+          size: 25,
+        ),
       );
 
   FocusedMenuItem _createDeleteButton(Function onPressed) => FocusedMenuItem(
@@ -674,5 +826,50 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
         ),
         onPressed: onPressed,
+        trailingIcon: const Icon(
+          CupertinoIcons.delete_solid,
+          color: Colors.red,
+          size: 25,
+        ),
       );
+
+  void _setOutfitSortType(int index) {
+    switch (index) {
+      case 0:
+        _outfitSortType = OutfitSortType.none;
+        break;
+      case 1:
+        _outfitSortType = OutfitSortType.name;
+        break;
+      case 2:
+        _outfitSortType = OutfitSortType.primaryColor;
+        break;
+      case 3:
+        _outfitSortType = OutfitSortType.secondaryColor;
+        break;
+      default:
+        _outfitSortType = OutfitSortType.none;
+        break;
+    }
+  }
+
+  void _setWearableSortType(int index) {
+    switch (index) {
+      case 0:
+        _wearableSortType = WearableSortType.none;
+        break;
+      case 1:
+        _wearableSortType = WearableSortType.name;
+        break;
+      case 2:
+        _wearableSortType = WearableSortType.color;
+        break;
+      case 3:
+        _wearableSortType = WearableSortType.brand;
+        break;
+      default:
+        _wearableSortType = WearableSortType.none;
+        break;
+    }
+  }
 }

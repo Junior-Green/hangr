@@ -11,6 +11,7 @@ Outfit _$OutfitFromJson(Map<String, dynamic> json) => Outfit(
       $enumDecode(_$OutfitTypeEnumMap, json['type']),
       json['name'] as String,
       json['primaryColor'] as String,
+      json['secondaryColor'] as String,
       json['imagePath'] as String,
       DateTime.parse(json['timeMade'] as String),
     );
@@ -19,6 +20,7 @@ Map<String, dynamic> _$OutfitToJson(Outfit instance) => <String, dynamic>{
       'type': _$OutfitTypeEnumMap[instance.type],
       'wearables': instance.wearableIds,
       'primaryColor': instance.primaryColor,
+      'secondaryColor': instance.secondaryColor,
       'imagePath': instance.imagePath,
       'timeMade': instance.timeMade.toIso8601String(),
     };

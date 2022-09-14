@@ -44,6 +44,7 @@ dependencies:
   path:
   path_provider:
   provider: ^6.0.2
+  rflutter_alert: ^2.0.4
   share_plus: ^4.0.10+1
   shared_preferences: ^2.0.15
   test: ^1.21.1

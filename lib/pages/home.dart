@@ -23,6 +23,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     super.initState();
   }
 
+
   @override
   void dispose() {
     _controller.dispose();
@@ -40,7 +41,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               value: _isVisible,
               child: const HomeCalendar(),
             ),
-            HomeWardrobe(homeTabController: _controller,),
+            HomeWardrobe(
+              homeTabController: _controller,
+            ),
           ],
         ),
         bottomNavigationBar: ValueListenableBuilder<bool>(

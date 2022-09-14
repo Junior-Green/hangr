@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:hangr/pages/home.dart';
 import 'package:hangr/services/calendar_map.dart';
@@ -41,8 +42,26 @@ class _LoadingScreenState extends State<LoadingScreen> {
       final Directory directory = await getApplicationDocumentsDirectory();
       final FileHandler handler = FileHandler(directory.path);
       final CalendarMap calendarMap = await handler.readCalendarMap();
-      final List<Outfit> outfits = await handler.readOutfits();
+      final MyOutfits outfits = MyOutfits(await handler.readOutfits());
       final MyWearables wearables = MyWearables(await handler.readWearables());
+
+      if (kDebugMode) {
+        await handler.deleteAllFiles();
+        wearables.getWearables.clear();
+        final ByteData byteData =
+            await rootBundle.load('assets/images/shirt.jpg');
+
+        final File file = await File('${directory.path}/shirt.jpg').create();
+        await file.writeAsBytes(
+          byteData.buffer
+              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
+        );
+        final List<Wearable> wearablesToAdd =
+            _getWearables('${directory.path}/shirt.jpg');
+        for (final w in wearablesToAdd) {
+          wearables.addWearable(w);
+        }
+      }
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -52,7 +71,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
             providers: [
               Provider.value(value: calendarMap),
               ChangeNotifierProvider.value(value: wearables),
-              Provider.value(value: outfits),
+              ChangeNotifierProvider.value(value: outfits),
             ],
             builder: (context, widget) => const Home(),
           ),
@@ -64,4 +83,142 @@ class _LoadingScreenState extends State<LoadingScreen> {
       }
     }
   }
+
+  List<Wearable> _getWearables(String directory) => [
+        Wearable(
+          '1',
+          WearableType.top,
+          'Nike',
+          'Black',
+          directory,
+          'Shirt1',
+          DateTime.now(),
+        ),
+        Wearable(
+          '2',
+          WearableType.top,
+          'Nike',
+          'Black',
+          directory,
+          'Shirt2',
+          DateTime.now(),
+        ),
+        Wearable(
+          '3',
+          WearableType.top,
+          'Nike',
+          'Black',
+          directory,
+          'Shirt3',
+          DateTime.now(),
+        ),
+        Wearable(
+          '4',
+          WearableType.bottom,
+          'Nike',
+          'Black',
+          directory,
+          'Bottom1',
+          DateTime.now(),
+        ),
+        Wearable(
+          '5',
+          WearableType.bottom,
+          'Nike',
+          'Black',
+          directory,
+          'Bottom2',
+          DateTime.now(),
+        ),
+        Wearable(
+          '6',
+          WearableType.bottom,
+          'Nike',
+          'Black',
+          directory,
+          'Bottom3',
+          DateTime.now(),
+        ),
+        Wearable(
+          '7',
+          WearableType.headwear,
+          'Nike',
+          'Black',
+          directory,
+          'Headwear1',
+          DateTime.now(),
+        ),
+        Wearable(
+          '8',
+          WearableType.headwear,
+          'Nike',
+          'Black',
+          directory,
+          'Headwear2',
+          DateTime.now(),
+        ),
+        Wearable(
+          '9',
+          WearableType.headwear,
+          'Nike',
+          'Black',
+          directory,
+          'Headwear3',
+          DateTime.now(),
+        ),
+        Wearable(
+          '10',
+          WearableType.footwear,
+          'Nike',
+          'Black',
+          directory,
+          'Footwear1',
+          DateTime.now(),
+        ),
+        Wearable(
+          '11',
+          WearableType.footwear,
+          'Nike',
+          'Black',
+          directory,
+          'Footwear2',
+          DateTime.now(),
+        ),
+        Wearable(
+          '12',
+          WearableType.footwear,
+          'Nike',
+          'Black',
+          directory,
+          'Footwear3',
+          DateTime.now(),
+        ),
+        Wearable(
+          '13',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory1',
+          DateTime.now(),
+        ),
+        Wearable(
+          '14',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory2',
+          DateTime.now(),
+        ),
+        Wearable(
+          '15',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+        )
+      ];
 }

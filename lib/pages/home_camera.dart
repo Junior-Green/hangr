@@ -5,52 +5,108 @@ import 'package:hangr/services/wearable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
-class HomeCamera extends StatefulWidget {
+class HomeCamera extends StatelessWidget {
   final TabController _controller;
   const HomeCamera(this._controller);
 
   @override
-  State<HomeCamera> createState() => _HomeCameraState();
-}
-
-class _HomeCameraState extends State<HomeCamera> with TickerProviderStateMixin {
-  @override
-  void initState() {
-    _getImage();
-    super.initState();
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _getImage(context));
+    return const Scaffold(
+      backgroundColor: Colors.black,
+    );
   }
 
-  @override
-  Widget build(BuildContext context) => const Scaffold(
-        backgroundColor: Colors.black,
-      );
-
-  Future<void> _getImage() async {
+  Future<void> _getImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    final ImageSource? source = await _getImageSource(context);
+    if (source == null) {
+      _controller.animateTo(1);
+      return;
+    }
+
+    final XFile? image = await picker.pickImage(
+      source: source,
+    );
 
     if (image == null) {
-      widget._controller.animateTo(1);
+      _controller.animateTo(1);
       return;
     }
-    final croppedImage = await _cropImage(image.path);
+    // ignore: use_build_context_synchronously
+    final croppedImage = await _cropImage(image.path, context);
 
-    if (croppedImage == null || !mounted) {
-      widget._controller.animateTo(1);
+    if (croppedImage == null) {
+      _controller.animateTo(1);
       return;
     }
+    // ignore: use_build_context_synchronously
     final wearables = context.read<MyWearables>();
+    // ignore: use_build_context_synchronously
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ChangeNotifierProvider.value(value: wearables, child: AddWearable(croppedImage)),
+        builder: (context) => ChangeNotifierProvider.value(
+          value: wearables,
+          child: AddWearable(croppedImage),
+        ),
       ),
-    ).then((val) => widget._controller.animateTo(1));
+    ).then((val) => _controller.animateTo(1));
   }
 
-  Future<Uint8List?> _cropImage(String path) async {
+  Future<ImageSource?> _getImageSource(BuildContext context) async {
+    ImageSource? source;
+    await Alert(
+      context: context,
+      type: AlertType.none,
+      title: 'Select Photo',
+      desc: "Do you want to take a picture or use an existing one?",
+      style: AlertStyle(
+        animationType: AnimationType.grow,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        alertBorder: RoundedRectangleBorder(
+          side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+          borderRadius: const BorderRadius.all(Radius.circular(15)),
+        ),
+        isCloseButton: false,
+        titleStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        descStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontSize: 15,
+        ),
+      ),
+      buttons: [
+        DialogButton(
+          height: 35,
+          radius: const BorderRadius.all(Radius.circular(8)),
+          color: Theme.of(context).colorScheme.tertiary,
+          onPressed: () {
+            source = ImageSource.gallery;
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Choose Photo'),
+        ),
+        DialogButton(
+          height: 35,
+          color: Theme.of(context).colorScheme.tertiary,
+          radius: const BorderRadius.all(Radius.circular(8)),
+          onPressed: () {
+            source = ImageSource.camera;
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Take Photo'),
+        )
+      ],
+    ).show();
+    return source;
+  }
+
+  Future<Uint8List?> _cropImage(String path, BuildContext context) async {
     final primaryColor = Theme.of(context).colorScheme.secondary;
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: path,

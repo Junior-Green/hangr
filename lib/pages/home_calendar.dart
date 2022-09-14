@@ -76,27 +76,25 @@ class _HomeCalendarState extends State<HomeCalendar> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Spacer(
-                        flex: 3,
+                        flex: 2,
                       ),
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: Text(
                           "${_monthToString[_currentDate.month]!} ${_currentDate.year}",
+                          maxLines: 1,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
-                          maxLines: 2,
                         ),
                       ),
-                      const Spacer(
-                        flex: 2,
-                      ),
+                      const Spacer(),
                       IconButton(
                         onPressed: () {},
                         icon: const Icon(
-                          Icons.settings,
+                          Icons.more_horiz_rounded,
                           size: 30,
                         ),
                         padding: EdgeInsets.zero,

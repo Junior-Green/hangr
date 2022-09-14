@@ -6,7 +6,7 @@ final darkTheme = ThemeData(
   scaffoldBackgroundColor: Colors.black,
   splashColor: Colors.transparent,
   errorColor: Colors.red,
-  
+  dividerColor: Colors.transparent,
   highlightColor: Colors.transparent,
   colorScheme: ColorScheme.dark(
     primary: Colors.black,
@@ -48,6 +48,7 @@ final darkTheme = ThemeData(
 final lightTheme = ThemeData(
   primaryColor: Colors.white,
   errorColor: Colors.red,
+  dividerColor: Colors.transparent,
   splashColor: Colors.transparent,
   highlightColor: Colors.transparent,
   cupertinoOverrideTheme: const CupertinoThemeData(

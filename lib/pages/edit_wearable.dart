@@ -339,7 +339,6 @@ class _EditWearableState extends State<EditWearable>
       ),
       growable: false,
     );
-    print(selected);
     _group = ToggableImageGroup(_images, selected)
       ..addListener(
         () => setState(() => _canScroll = _group.getSelectedImage() != null),

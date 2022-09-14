@@ -22,13 +22,21 @@ enum OutfitType {
 class Outfit {
   final String name;
   final String primaryColor;
+  final String secondaryColor;
   final OutfitType type;
   final List<String> wearableIds;
   final String imagePath;
   final DateTime timeMade;
 
-  const Outfit(this.wearableIds, this.type, this.name, this.primaryColor,
-      this.imagePath, this.timeMade);
+  const Outfit(
+    this.wearableIds,
+    this.type,
+    this.name,
+    this.primaryColor,
+    this.secondaryColor,
+    this.imagePath,
+    this.timeMade,
+  );
 
   factory Outfit.fromJson(Map<String, dynamic> json) => _$OutfitFromJson(json);
   Map<String, dynamic> toJson() => _$OutfitToJson(this);
@@ -69,7 +77,7 @@ class MyOutfits extends ChangeNotifier {
   bool containsWearable(String id) =>
       _outfits.indexWhere((element) => element.wearableIds.contains(id)) != -1;
 
-  List<Outfit> get getOutfit => _outfits.toList();
+  List<Outfit> get getOutfits => _outfits.toList();
 
   Future<void> _initHandler() async {
     final Directory directory = await getApplicationDocumentsDirectory();

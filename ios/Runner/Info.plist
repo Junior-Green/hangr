@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Allow this app to access the device camera to take and store photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow this app to access selected photos in the device photo gallery</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>
