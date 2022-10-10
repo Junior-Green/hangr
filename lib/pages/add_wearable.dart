@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
@@ -9,6 +10,7 @@ import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/toggable_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:uuid/uuid.dart';
 
 class AddWearable extends StatefulWidget {
@@ -26,8 +28,8 @@ class _AddWearableState extends State<AddWearable>
   late final TextEditingController _nameEditingController;
   late final TextEditingController _brandEditingController;
   late final TextEditingController _colorEditingController;
-  late final List<ToggableImage> _images;
-  late final ToggableImageGroup _group;
+  late final List<ToggableImage<WearableType>> _images;
+  late final ToggableImageGroup<WearableType> _group;
   late final AudioPlayer _player;
   List<String> brands = [];
   List<String> colors = [];
@@ -67,13 +69,21 @@ class _AddWearableState extends State<AddWearable>
   @override
   Widget build(BuildContext context) => GestureDetector(
         child: Scaffold(
-          body: Center(
-            child: Column(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: SafeArea(
-                    bottom: false,
+          body: SafeArea(
+            child: Center(
+              child: Column(
+                children: [
+                  IconButton(
+                    iconSize: 30,
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      CupertinoIcons.trash_fill,
+                      color: Colors.red,
+                    ),
+                    padding: const EdgeInsets.only(bottom: 10),
+                  ),
+                  Expanded(
+                    flex: 3,
                     child: ClipRRect(
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: AspectRatio(
@@ -85,17 +95,17 @@ class _AddWearableState extends State<AddWearable>
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: TabBarView(
-                    physics: _canScroll
-                        ? null
-                        : const NeverScrollableScrollPhysics(),
-                    controller: _controller,
-                    children: _inputFields,
-                  ),
-                )
-              ],
+                  Expanded(
+                    child: TabBarView(
+                      physics: _canScroll
+                          ? null
+                          : const NeverScrollableScrollPhysics(),
+                      controller: _controller,
+                      children: _inputFields,
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
           bottomNavigationBar: IgnorePointer(
@@ -282,38 +292,45 @@ class _AddWearableState extends State<AddWearable>
     if (wearableType == null) {
       await _dialog();
       if (!mounted) return;
-      Navigator.pop(context, false);
+      Navigator.pop(context);
     }
-    final newWearable = Wearable(
-      generatedId,
-      wearableType!,
-      _brandEditingController.text,
-      _colorEditingController.text,
-      imagePath,
-      _nameEditingController.text,
-      DateTime.now(),
-    );
-    if (!mounted) return;
 
-    context.read<MyWearables>().addWearable(newWearable);
-    await File(imagePath).writeAsBytes(widget._image);
+    try {
+      final newWearable = Wearable(
+        generatedId,
+        wearableType!,
+        _brandEditingController.text,
+        _colorEditingController.text,
+        imagePath,
+        _nameEditingController.text,
+        DateTime.now(),
+      );
+      if (!mounted) return;
 
-    await _player.play(
-      AssetSource('audio/clothing_creation_sfx.mp3'),
-      volume: 1,
-      mode: PlayerMode.lowLatency,
-    );
-    HapticFeedback.heavyImpact();
+      await context.read<MyWearables>().addWearable(newWearable);
+      await File(imagePath).writeAsBytes(widget._image);
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+      await _player.play(
+        AssetSource('audio/clothing_creation_sfx.mp3'),
+        volume: 1,
+        mode: PlayerMode.lowLatency,
+      );
+      HapticFeedback.heavyImpact();
 
-    if (!mounted) return;
+      await Future.delayed(const Duration(milliseconds: 1500));
 
-    Navigator.pop(context, true);
+      if (!mounted) return;
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      await _dialog();
+      if (!mounted) return;
+      Navigator.pop(context);
+    }
   }
 
   void _initImages() {
-    _images = List<ToggableImage>.from(
+    _images = List<ToggableImage<WearableType>>.from(
       WearableType.values.map(
         (type) {
           final val = type.toString().substring(13);
@@ -329,13 +346,18 @@ class _AddWearableState extends State<AddWearable>
               width: 50,
               height: 50,
             ),
-            val.replaceFirst(val[0], val[0].toUpperCase()),
+            type,
+            Text(
+              val.replaceFirst(val[0], val[0].toUpperCase()),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           );
         },
       ),
       growable: false,
     );
-    _group = ToggableImageGroup(_images)
+    _group = ToggableImageGroup<WearableType>(_images)
       ..addListener(() => setState(() => _checkValidity()));
   }
 
@@ -452,67 +474,44 @@ class _AddWearableState extends State<AddWearable>
     _group.dispose();
   }
 
-  WearableType? _getWearableType() {
-    final label = _group.getSelectedImage() == null
-        ? ''
-        : _group.getSelectedImage()!.label.toLowerCase();
+  WearableType? _getWearableType() => _group.getSelectedImage() == null
+      ? null
+      : _group.getSelectedImage()!.value;
 
-    switch (label) {
-      case 'headwear':
-        return WearableType.headwear;
-      case 'footwear':
-        return WearableType.footwear;
-      case 'bottom':
-        return WearableType.bottom;
-      case 'top':
-        return WearableType.top;
-      case 'accessory':
-        return WearableType.accessory;
-      default:
-        return null;
-    }
-  }
-
-  Future<void> _dialog() {
-    return showDialog(
-      builder: (context) => AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        title: const Center(
-          child: Text(
-            "Error",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-        content: const Text(
-          'An error occured.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Okay",
-                    // ignore: unnecessary_const
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+  Future<void> _dialog() async {
+    await Alert(
       context: context,
-    );
+      type: AlertType.none,
+      title: 'Error',
+      desc: "An error occured.",
+      style: AlertStyle(
+        animationType: AnimationType.grow,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        alertBorder: RoundedRectangleBorder(
+          side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+          borderRadius: const BorderRadius.all(Radius.circular(15)),
+        ),
+        isCloseButton: false,
+        titleStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        descStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontSize: 15,
+        ),
+      ),
+      buttons: [
+        DialogButton(
+          height: 35,
+          color: Theme.of(context).colorScheme.tertiary,
+          radius: const BorderRadius.all(Radius.circular(8)),
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Okay'),
+        )
+      ],
+    ).show();
   }
 }

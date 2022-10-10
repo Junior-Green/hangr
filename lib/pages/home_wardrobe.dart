@@ -16,6 +16,7 @@ import 'package:hangr/widgets/zoomable_outfit.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:share_plus/share_plus.dart';
 
 enum WearbaleSortType { none, name, color, brand }
@@ -121,7 +122,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         primary: false,
         floating: true,
         elevation: 0,
-        toolbarHeight: 160,
+        toolbarHeight: 170,
         expandedHeight: 110,
         flexibleSpace: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) =>
@@ -245,7 +246,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
       );
 
   SliverPadding _createSliverGrid(WardrobeMode mode) => SliverPadding(
-        padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+        padding: const EdgeInsets.all(10),
         sliver: SliverGrid.count(
           childAspectRatio: 3 / 4,
           mainAxisSpacing: 5,
@@ -264,6 +265,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                 ? _wearableTypeFilters.remove(WearableType.top)
                 : _wearableTypeFilters.add(WearableType.top),
           ),
+          iconSize: 35,
           icon: const Icon(CustomIcons.top),
           color: _wearableTypeFilters.contains(WearableType.top)
               ? Theme.of(context).colorScheme.tertiary
@@ -275,6 +277,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                 ? _wearableTypeFilters.remove(WearableType.bottom)
                 : _wearableTypeFilters.add(WearableType.bottom),
           ),
+          iconSize: 35,
           icon: const Icon(CustomIcons.bottom),
           color: _wearableTypeFilters.contains(WearableType.bottom)
               ? Theme.of(context).colorScheme.tertiary
@@ -286,6 +289,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                 ? _wearableTypeFilters.remove(WearableType.footwear)
                 : _wearableTypeFilters.add(WearableType.footwear),
           ),
+          iconSize: 35,
           icon: const Icon(CustomIcons.footwear),
           color: _wearableTypeFilters.contains(WearableType.footwear)
               ? Theme.of(context).colorScheme.tertiary
@@ -297,6 +301,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                 ? _wearableTypeFilters.remove(WearableType.accessory)
                 : _wearableTypeFilters.add(WearableType.accessory),
           ),
+          iconSize: 35,
           icon: const Icon(CustomIcons.accessory),
           color: _wearableTypeFilters.contains(WearableType.accessory)
               ? Theme.of(context).colorScheme.tertiary
@@ -308,6 +313,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                 ? _wearableTypeFilters.remove(WearableType.headwear)
                 : _wearableTypeFilters.add(WearableType.headwear),
           ),
+          iconSize: 35,
           icon: const Icon(CustomIcons.headwear),
           color: _wearableTypeFilters.contains(WearableType.headwear)
               ? Theme.of(context).colorScheme.tertiary
@@ -318,51 +324,52 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   List<IconButton> _outfitsFilterButtons(BuildContext context) => [
         IconButton(
           onPressed: () => setState(
-            () => _wearableTypeFilters.contains(WearableType.top)
-                ? _wearableTypeFilters.remove(WearableType.top)
-                : _wearableTypeFilters.add(WearableType.top),
+            () => _outfitTypeFilters.contains(OutfitType.casual)
+                ? _outfitTypeFilters.remove(OutfitType.casual)
+                : _outfitTypeFilters.add(OutfitType.casual),
           ),
           icon: const Icon(CustomIcons.top),
-          color: _wearableTypeFilters.contains(WearableType.top)
+          color: _outfitTypeFilters.contains(OutfitType.casual)
               ? Theme.of(context).colorScheme.tertiary
               : Theme.of(context).colorScheme.onSecondary,
-          iconSize: 25,
+          iconSize: 35,
         ),
         IconButton(
           onPressed: () => setState(
-            () => _wearableTypeFilters.contains(WearableType.bottom)
-                ? _wearableTypeFilters.remove(WearableType.bottom)
-                : _wearableTypeFilters.add(WearableType.bottom),
+            () => _outfitTypeFilters.contains(OutfitType.formal)
+                ? _outfitTypeFilters.remove(OutfitType.formal)
+                : _outfitTypeFilters.add(OutfitType.formal),
           ),
           icon: const Icon(CustomIcons.formal),
-          color: _wearableTypeFilters.contains(WearableType.bottom)
+          color: _outfitTypeFilters.contains(OutfitType.formal)
               ? Theme.of(context).colorScheme.tertiary
               : Theme.of(context).colorScheme.onSecondary,
-          iconSize: 25,
+          iconSize: 35,
         ),
         IconButton(
           onPressed: () => setState(
-            () => _wearableTypeFilters.contains(WearableType.footwear)
-                ? _wearableTypeFilters.remove(WearableType.footwear)
-                : _wearableTypeFilters.add(WearableType.footwear),
+            () => _outfitTypeFilters.contains(OutfitType.business)
+                ? _outfitTypeFilters.remove(OutfitType.business)
+                : _outfitTypeFilters.add(OutfitType.business),
           ),
           icon: const Icon(CustomIcons.business),
-          color: _wearableTypeFilters.contains(WearableType.footwear)
+          color: _outfitTypeFilters.contains(OutfitType.business)
               ? Theme.of(context).colorScheme.tertiary
               : Theme.of(context).colorScheme.onSecondary,
-          iconSize: 30,
+          iconSize: 35,
         ),
         IconButton(
           onPressed: () => setState(
-            () => _wearableTypeFilters.contains(WearableType.accessory)
-                ? _wearableTypeFilters.remove(WearableType.accessory)
-                : _wearableTypeFilters.add(WearableType.accessory),
+            () => _outfitTypeFilters.contains(OutfitType.athletic)
+                ? _outfitTypeFilters.remove(OutfitType.athletic)
+                : _outfitTypeFilters.add(OutfitType.athletic),
           ),
           icon: const Icon(CustomIcons.athletic),
-          color: _wearableTypeFilters.contains(WearableType.accessory)
+          padding: EdgeInsets.zero,
+          color: _outfitTypeFilters.contains(OutfitType.athletic)
               ? Theme.of(context).colorScheme.tertiary
               : Theme.of(context).colorScheme.onSecondary,
-          iconSize: 25,
+          iconSize: 35,
         ),
       ];
 
@@ -419,7 +426,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
     return filteredList
         .map<ZoomableWearable>(
           (wearable) => ZoomableWearable(
-            _getWearableMenuOptions(wearable, _wearables),
+            _getWearableMenuOptions(wearable, _outfits),
             wearable,
           ),
         )
@@ -697,7 +704,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
 
   List<FocusedMenuItem> _getWearableMenuOptions(
     Wearable w,
-    MyWearables wearables,
+    MyOutfits outfits,
   ) =>
       [
         _createEditButton(
@@ -706,7 +713,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
               context,
               MaterialPageRoute(
                 builder: (context) => ListenableProvider<MyWearables>.value(
-                  value: wearables,
+                  value: _wearables,
                   child: EditWearable(w),
                 ),
               ),
@@ -722,11 +729,15 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           ),
         ),
         _createDeleteButton(
-          () => wearables.removeWearable(w),
+          () async {
+            if (outfits.containsWearable(w.id)) {
+              await _showWearableDeleteAlert(w);
+              return;
+            }
+            await _wearables.removeWearable(w);
+          },
         ),
       ];
-
-  // TODO: Finish implementation
   List<FocusedMenuItem> _getOutfitMenuOptions(
     Outfit outfit,
     MyOutfits outfits,
@@ -737,7 +748,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => EditOutfit(outfit, outfits),
+                builder: (context) => EditOutfit(outfit, outfits, _wearables),
               ),
             );
           },
@@ -777,7 +788,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         return 'my casual outfit!';
       case OutfitType.formal:
         return 'my formal outfit!';
-      case OutfitType.sports:
+      case OutfitType.athletic:
         return 'my sports outfit';
       default:
         return 'my outfit!';
@@ -872,4 +883,56 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         break;
     }
   }
+
+  Future<bool?> _showWearableDeleteAlert(Wearable w) => Alert(
+        context: context,
+        type: AlertType.none,
+        title: 'Warning',
+        desc:
+            "Deleting this piece will delete all outfits that contain it. Would you like to delete?",
+        style: AlertStyle(
+          animationType: AnimationType.grow,
+          isOverlayTapDismiss: false,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          alertBorder: RoundedRectangleBorder(
+            side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+          ),
+          isCloseButton: false,
+          titleStyle: const TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+            fontSize: 25,
+          ),
+          descStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontSize: 15,
+          ),
+        ),
+        buttons: [
+          DialogButton(
+            height: 35,
+            radius: const BorderRadius.all(Radius.circular(8)),
+            color: Theme.of(context).colorScheme.tertiary,
+            onPressed: () async {
+              _outfits.removeOutfitsWithWearable(w.id);
+              await _wearables.removeWearable(w);
+
+              if (!mounted) {
+                return;
+              }
+
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            child: const Text('Delete'),
+          ),
+          DialogButton(
+            height: 35,
+            color: Theme.of(context).colorScheme.tertiary,
+            radius: const BorderRadius.all(Radius.circular(8)),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            child: const Text('Cancel'),
+          )
+        ],
+      ).show();
 }

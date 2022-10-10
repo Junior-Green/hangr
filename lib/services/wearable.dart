@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hangr/services/file_handler.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:path_provider/path_provider.dart';
 
 part '../serializers/wearable.g.dart';
 
@@ -47,30 +46,36 @@ class Wearable {
 }
 
 class MyWearables extends ChangeNotifier {
-  late final FileHandler _handler;
+  final FileHandler _handler;
   final List<Wearable> _wearables;
 
-  MyWearables(this._wearables) {
-    _initHandler();
-  }
+  MyWearables(this._wearables, this._handler);
 
-  void addWearable(Wearable w) {
+  Future<void> addWearable(Wearable w) async {
     _wearables.add(w);
-    _handler.writeWearables(_wearables);
+    await _handler.writeWearables(_wearables);
     notifyListeners();
   }
 
-  void removeWearable(Wearable w) {
-    File(w.imagePath).delete();
+  Future<void> removeWearable(Wearable w) async {
+    if (await File(w.imagePath).exists()) {
+      await File(w.imagePath).delete();
+    }
     _wearables.remove(w);
-    _handler.writeWearables(_wearables);
+    await _handler.writeWearables(_wearables);
+    notifyListeners();
+  }
+
+  Future<void> removeAllWearables() async {
+    for (final w in _wearables) {
+      if (await File(w.imagePath).exists()) {
+        await File(w.imagePath).delete();
+      }
+    }
+    _wearables.clear();
+    await _handler.writeWearables(_wearables);
     notifyListeners();
   }
 
   List<Wearable> get getWearables => _wearables.toList();
-
-  Future<void> _initHandler() async {
-    final Directory directory = await getApplicationDocumentsDirectory();
-    _handler = FileHandler(directory.path);
-  }
 }

@@ -12,8 +12,8 @@ enum OutfitType {
   casual,
   @JsonValue("formal")
   formal,
-  @JsonValue("sports")
-  sports,
+  @JsonValue("athletic")
+  athletic,
   @JsonValue("business")
   business
 }
@@ -50,27 +50,44 @@ class MyOutfits extends ChangeNotifier {
     _initHandler();
   }
 
-  void addOutfit(Outfit o) {
+  Future<void> addOutfit(Outfit o) async {
     _outfits.add(o);
+    await _handler.writeOutfits(_outfits);
     notifyListeners();
-    _handler.writeOutfits(_outfits);
   }
 
-  void removeOutfit(Outfit o) {
+  Future<void> removeOutfit(Outfit o) async {
+    if (await File(o.imagePath).exists()) {
+      await File(o.imagePath).delete();
+    }
     _outfits.remove(o);
+    await _handler.writeOutfits(_outfits);
     notifyListeners();
-    _handler.writeOutfits(_outfits);
   }
 
-  void removeOutfitsWithWearable(String id) {
+  Future<void> removeOutfitsWithWearable(String id) async {
     _outfits.removeWhere((element) {
       if (element.wearableIds.contains(id)) {
-        File(element.imagePath).delete();
+        if (File(element.imagePath).existsSync()) {
+          File(element.imagePath).deleteSync();
+        }
         return true;
       }
       return false;
     });
 
+    await _handler.writeOutfits(_outfits);
+    notifyListeners();
+  }
+
+  Future<void> removeAllOutfits() async {
+    for (final outfit in _outfits) {
+      if (await File(outfit.imagePath).exists()) {
+        await File(outfit.imagePath).delete();
+      }
+    }
+    _outfits.clear();
+    await _handler.writeOutfits(_outfits);
     notifyListeners();
   }
 

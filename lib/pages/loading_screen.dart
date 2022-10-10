@@ -43,11 +43,12 @@ class _LoadingScreenState extends State<LoadingScreen> {
       final FileHandler handler = FileHandler(directory.path);
       final CalendarMap calendarMap = await handler.readCalendarMap();
       final MyOutfits outfits = MyOutfits(await handler.readOutfits());
-      final MyWearables wearables = MyWearables(await handler.readWearables());
+      final MyWearables wearables =
+          MyWearables(await handler.readWearables(), handler);
 
       if (kDebugMode) {
-        await handler.deleteAllFiles();
-        wearables.getWearables.clear();
+        await wearables.removeAllWearables();
+        await outfits.removeAllOutfits();
         final ByteData byteData =
             await rootBundle.load('assets/images/shirt.jpg');
 

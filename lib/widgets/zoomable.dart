@@ -71,6 +71,7 @@ abstract class Zoomable extends StatelessWidget {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 50,
+                  color: Colors.white,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -106,7 +107,11 @@ abstract class Zoomable extends StatelessWidget {
             ),
             Text(
               DateFormat.yMMMMd().add_jm().format(_time),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 10,
+                color: Colors.white,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

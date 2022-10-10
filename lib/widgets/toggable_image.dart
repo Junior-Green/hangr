@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
-class ToggableImage extends StatefulWidget {
-  final String _label;
-  final Image _toggleOn;
-  final Image _toggleOff;
+class ToggableImage<T> extends StatefulWidget {
+  final Widget _label;
+  final Widget _toggleOn;
+  final Widget _toggleOff;
   final Function? _onTap;
   final ValueNotifier<bool> _toggled = ValueNotifier(false);
+  final T _value;
 
   ToggableImage(
     this._toggleOn,
-    this._toggleOff, [
-    this._label = "",
+    this._toggleOff,
+    this._value, [
+    this._label = const Text(''),
     this._onTap,
   ]);
   void toggle() => _toggled.value = !_toggled.value;
@@ -19,9 +21,10 @@ class ToggableImage extends StatefulWidget {
   void onTap() => _onTap != null ? _onTap!() : null;
 
   bool get isToggled => _toggled.value;
-  String get label => _label;
-  Image get toggleOn => _toggleOn;
-  Image get toggleOff => _toggleOff;
+  Widget get toggleOn => _toggleOn;
+  Widget get label => _label;
+  Widget get toggleOff => _toggleOff;
+  T get value => _value;
 
   @override
   State<ToggableImage> createState() => _ToggableImageState();
@@ -42,11 +45,7 @@ class _ToggableImageState extends State<ToggableImage> {
               const SizedBox(
                 height: 5,
               ),
-              Text(
-                widget._label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              )
+              widget._label
             ],
           ),
         ),

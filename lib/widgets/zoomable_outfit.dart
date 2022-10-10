@@ -5,7 +5,13 @@ import 'package:hangr/widgets/zoomable.dart';
 class ZoomableOutfit extends Zoomable {
   final Outfit _outfit;
   ZoomableOutfit(List<FocusedMenuItem> options, this._outfit)
-      : super(options, _outfit.name, '${_outfit.primaryColor}·${_outfit.secondaryColor}', _outfit.imagePath, _outfit.timeMade);
+      : super(
+          options,
+          _outfit.name,
+          '${_outfit.primaryColor} · ${_outfit.secondaryColor} \n ${_outfit.wearableIds.length} ${_outfit.wearableIds.length > 1 ? 'Pieces' : 'Piece'}',
+          _outfit.imagePath,
+          _outfit.timeMade,
+        );
 
   Outfit get outfit => _outfit;
 }

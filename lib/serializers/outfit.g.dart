@@ -18,6 +18,7 @@ Outfit _$OutfitFromJson(Map<String, dynamic> json) => Outfit(
 
 Map<String, dynamic> _$OutfitToJson(Outfit instance) => <String, dynamic>{
       'type': _$OutfitTypeEnumMap[instance.type],
+      'name': instance.name,
       'wearables': instance.wearableIds,
       'primaryColor': instance.primaryColor,
       'secondaryColor': instance.secondaryColor,
@@ -28,6 +29,6 @@ Map<String, dynamic> _$OutfitToJson(Outfit instance) => <String, dynamic>{
 const _$OutfitTypeEnumMap = {
   OutfitType.casual: 'casual',
   OutfitType.formal: 'formal',
-  OutfitType.sports: 'sports',
+  OutfitType.athletic: 'athletic',
   OutfitType.business: 'business',
 };

@@ -54,8 +54,9 @@ final lightTheme = ThemeData(
   cupertinoOverrideTheme: const CupertinoThemeData(
     primaryColor: Color.fromARGB(255, 210, 3, 79),
   ),
-  colorScheme: ColorScheme.dark(
+  colorScheme: ColorScheme.light(
     primary: Colors.white,
+    onPrimary: Colors.black,
     secondary: Colors.grey[300]!,
     onSecondary: const Color.fromARGB(128, 180, 180, 180),
     tertiary: const Color.fromARGB(255, 210, 3, 79),

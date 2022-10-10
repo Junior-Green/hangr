@@ -8,6 +8,7 @@ import 'package:hangr/services/togglable_image_group.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/toggable_image.dart';
 import 'package:provider/provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class EditWearable extends StatefulWidget {
   final Wearable _wearable;
@@ -24,8 +25,8 @@ class _EditWearableState extends State<EditWearable>
   late final TextEditingController _nameEditingController;
   late final TextEditingController _brandEditingController;
   late final TextEditingController _colorEditingController;
-  late final List<ToggableImage> _images;
-  late final ToggableImageGroup _group;
+  late final List<ToggableImage<WearableType>> _images;
+  late final ToggableImageGroup<WearableType> _group;
   late final AudioPlayer _player;
   List<String> brands = [];
   List<String> colors = [];
@@ -74,7 +75,10 @@ class _EditWearableState extends State<EditWearable>
                     borderRadius: const BorderRadius.all(Radius.circular(20)),
                     child: AspectRatio(
                       aspectRatio: _aspectRatio,
-                      child: Image.file(File(widget._wearable.imagePath)),
+                      child: Image.file(
+                        File(widget._wearable.imagePath),
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ),
                 ),
@@ -282,39 +286,52 @@ class _EditWearableState extends State<EditWearable>
       if (!mounted) return;
       Navigator.pop(context, false);
     }
-    final newWearable = Wearable(
-      widget._wearable.id,
-      wearableType!,
-      newBrand,
-      newColor,
-      widget._wearable.imagePath,
-      newName,
-      widget._wearable.timeTaken,
-    );
-    if (!mounted) return;
 
-    context.read<MyWearables>()
-      ..removeWearable(widget._wearable)
-      ..addWearable(newWearable);
+    try {
+      final newWearable = Wearable(
+        widget._wearable.id,
+        wearableType!,
+        newBrand,
+        newColor,
+        widget._wearable.imagePath,
+        newName,
+        widget._wearable.timeTaken,
+      );
+      if (!mounted) return;
 
-    await _player.play(
-      AssetSource('audio/clothing_creation_sfx.mp3'),
-      volume: 1,
-      mode: PlayerMode.lowLatency,
-    );
-    HapticFeedback.heavyImpact();
+      final image = await File(newWearable.imagePath).readAsBytes();
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    
 
-    if (!mounted) return;
+      await context.read<MyWearables>().removeWearable(widget._wearable);
+      if (!mounted) return;
+      await context.read<MyWearables>().addWearable(newWearable);
 
-    Navigator.pop(context, true);
+      if (!await File(newWearable.imagePath).exists()) {
+        await File(newWearable.imagePath).writeAsBytes(image);
+      }
+
+      await _player.play(
+        AssetSource('audio/clothing_creation_sfx.mp3'),
+        volume: 1,
+        mode: PlayerMode.lowLatency,
+      );
+      HapticFeedback.heavyImpact();
+
+      await Future.delayed(const Duration(milliseconds: 1500));
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (e) {
+      await _dialog();
+      if (!mounted) return;
+      Navigator.pop(context);
+    }
   }
 
   void _initImages() {
     int currIndex = 0;
     int selected = -1;
-    _images = List<ToggableImage>.from(
+    _images = List<ToggableImage<WearableType>>.from(
       WearableType.values.map(
         (type) {
           if (type == widget._wearable.type) {
@@ -333,7 +350,12 @@ class _EditWearableState extends State<EditWearable>
               width: 50,
               height: 50,
             ),
-            val.replaceFirst(val[0], val[0].toUpperCase()),
+            type,
+            Text(
+              val.replaceFirst(val[0], val[0].toUpperCase()),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           );
         },
       ),
@@ -438,11 +460,11 @@ class _EditWearableState extends State<EditWearable>
   }
 
   WearableType? _getWearableType() {
-    final label = _group.getSelectedImage() == null
-        ? ''
-        : _group.getSelectedImage()!.label.toLowerCase();
+    final textWidget = _group.getSelectedImage() == null
+        ? null
+        : _group.getSelectedImage()!.label as Text;
 
-    switch (label) {
+    switch (textWidget?.data?.toLowerCase()) {
       case 'headwear':
         return WearableType.headwear;
       case 'footwear':
@@ -458,46 +480,38 @@ class _EditWearableState extends State<EditWearable>
     }
   }
 
-  Future<void> _dialog() {
-    return showDialog(
-      builder: (context) => AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        title: const Center(
-          child: Text(
-            "Error",
-            style: TextStyle(fontWeight: FontWeight.bold),
+  Future<void> _dialog() async => Alert(
+        context: context,
+        type: AlertType.none,
+        title: 'Error',
+        desc: "An error occured.",
+        style: AlertStyle(
+          animationType: AnimationType.grow,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          alertBorder: RoundedRectangleBorder(
+            side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+          ),
+          isCloseButton: false,
+          titleStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+          descStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontSize: 15,
           ),
         ),
-        content: const Text(
-          'An error occured.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Okay",
-                    // ignore: unnecessary_const
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        buttons: [
+          DialogButton(
+            height: 35,
+            color: Theme.of(context).colorScheme.tertiary,
+            radius: const BorderRadius.all(Radius.circular(8)),
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            child: const Text('Okay'),
+          )
         ],
-      ),
-      context: context,
-    );
-  }
+      ).show();
 }

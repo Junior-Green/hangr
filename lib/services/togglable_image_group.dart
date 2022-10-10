@@ -1,19 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:hangr/widgets/toggable_image.dart';
 
-class ToggableImageGroup extends ChangeNotifier {
-  late final List<ToggableImage> _images;
+class ToggableImageGroup<T> extends ChangeNotifier {
+  late final List<ToggableImage<T>> _images;
   int _selectedIndex = -1;
 
-  ToggableImageGroup(List<ToggableImage> images, [int initialToggle = -1]) {
-    final List<ToggableImage> newImages = [];
+  ToggableImageGroup(List<ToggableImage<T>> images, [int initialToggle = -1]) {
+    final List<ToggableImage<T>> newImages = [];
     for (int i = 0; i < images.length; i++) {
       newImages.add(
-        ToggableImage(
+        ToggableImage<T>(
           images[i].toggleOn,
           images[i].toggleOff,
+          images[i].value,
           images[i].label,
-          () => _buttonToggled(i),
+          () {
+            _buttonToggled(i);
+            images[i].onTap();
+          },
         ),
       );
     }
@@ -26,7 +30,7 @@ class ToggableImageGroup extends ChangeNotifier {
 
   bool isSelected() => _selectedIndex != -1;
 
-  ToggableImage? getSelectedImage() =>
+  ToggableImage<T>? getSelectedImage() =>
       isSelected() ? _images[_selectedIndex] : null;
 
   void _buttonToggled(int index) {
@@ -39,5 +43,5 @@ class ToggableImageGroup extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<ToggableImage> get toggableImages => _images;
+  List<ToggableImage<T>> get toggableImages => _images;
 }
