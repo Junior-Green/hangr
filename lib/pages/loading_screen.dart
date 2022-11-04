@@ -7,9 +7,13 @@ import 'package:hangr/pages/home.dart';
 import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/file_handler.dart';
 import 'package:hangr/services/outfit.dart';
+import 'package:hangr/services/page_transition.dart';
+import 'package:hangr/services/theme_handler.dart';
 import 'package:hangr/services/wearable.dart';
+import 'package:ntp/ntp.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({Key? key}) : super(key: key);
@@ -22,7 +26,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    initData();
+    initApp();
   }
 
   @override
@@ -37,14 +41,23 @@ class _LoadingScreenState extends State<LoadingScreen> {
     );
   }
 
-  Future<void> initData() async {
+  Future<void> initApp() async {
     try {
       final Directory directory = await getApplicationDocumentsDirectory();
       final FileHandler handler = FileHandler(directory.path);
-      final CalendarMap calendarMap = await handler.readCalendarMap();
-      final MyOutfits outfits = MyOutfits(await handler.readOutfits());
+      final CalendarMap calendarMap =
+          CalendarMap(await handler.readCalendarMap(), handler);
+      final MyOutfits outfits = MyOutfits(await handler.readOutfits(), handler);
       final MyWearables wearables =
           MyWearables(await handler.readWearables(), handler);
+      final configurations = await handler.readConfigMap();
+      final date = await _fetchTime();
+
+      if (!mounted) return;
+
+      context
+          .read<ThemeHandler>()
+          .setMode(_getThemeMode(configurations['theme'] as String));
 
       if (kDebugMode) {
         await wearables.removeAllWearables();
@@ -65,18 +78,21 @@ class _LoadingScreenState extends State<LoadingScreen> {
       }
 
       if (!mounted) return;
-      Navigator.pushReplacement(
+
+      fadeInPageReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => MultiProvider(
-            providers: [
-              Provider.value(value: calendarMap),
-              ChangeNotifierProvider.value(value: wearables),
-              ChangeNotifierProvider.value(value: outfits),
-            ],
-            builder: (context, widget) => const Home(),
-          ),
+        MultiProvider(
+          providers: [
+            Provider.value(value: calendarMap),
+            Provider.value(value: configurations),
+            Provider(create: (_) => DateTime(date.year, date.month, date.day)),
+            ChangeNotifierProvider.value(value: wearables),
+            ChangeNotifierProvider.value(value: outfits),
+            ChangeNotifierProvider.value(value: context.read<ThemeHandler>()),
+          ],
+          builder: (context, widget) => const Home(),
         ),
+        const Duration(milliseconds: 500),
       );
     } on Exception catch (e) {
       if (kDebugMode) {
@@ -222,4 +238,66 @@ class _LoadingScreenState extends State<LoadingScreen> {
           DateTime.now(),
         )
       ];
+
+  ThemeMode _getThemeMode(String val) {
+    switch (val) {
+      case 'system':
+        return ThemeMode.system;
+      case 'dark':
+        return ThemeMode.dark;
+      case 'light':
+        return ThemeMode.light;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  Future<DateTime> _fetchTime() async =>
+      NTP.now(timeout: const Duration(milliseconds: 3000)).onError(
+        (error, stackTrace) async {
+          await _showErrorMessage(context);
+          return DateTime(
+            DateTime.now().year,
+            DateTime.now().month,
+            DateTime.now().day,
+          );
+        },
+      );
+
+  Future<bool?> _showErrorMessage(BuildContext context) => Alert(
+        context: context,
+        type: AlertType.none,
+        title: 'Connection Error',
+        desc:
+            "An error occured connecting to the internet. The device's time will be used.",
+        style: AlertStyle(
+          animationType: AnimationType.grow,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          alertBorder: RoundedRectangleBorder(
+            side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+            borderRadius: const BorderRadius.all(Radius.circular(15)),
+          ),
+          isCloseButton: false,
+          titleStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+          descStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontSize: 15,
+          ),
+        ),
+        buttons: [
+          DialogButton(
+            height: 35,
+            margin: const EdgeInsets.symmetric(horizontal: 50),
+            radius: const BorderRadius.all(Radius.circular(10)),
+            color: Theme.of(context).colorScheme.tertiary,
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+            },
+            child: const Text('Okay'),
+          )
+        ],
+      ).show();
 }

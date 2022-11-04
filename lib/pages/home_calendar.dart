@@ -2,25 +2,27 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hangr/pages/home.dart';
+import 'package:hangr/pages/settings/settings.dart';
+import 'package:hangr/services/page_transition.dart';
+import 'package:hangr/services/theme_handler.dart';
 import 'package:hangr/widgets/calendar_date.dart';
 import 'package:indexed_list_view/indexed_list_view.dart';
 import 'package:provider/provider.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:ntp/ntp.dart';
 
 class HomeCalendar extends StatefulWidget {
-  const HomeCalendar({Key? key}) : super(key: key);
+  final DateJump date;
+  const HomeCalendar({Key? key, required this.date}) : super(key: key);
 
   @override
   State<HomeCalendar> createState() => _HomeCalendarState();
 }
 
 class _HomeCalendarState extends State<HomeCalendar> {
-  late final DateTime _today;
+  late final DateTime _today = Provider.of<DateTime>(context, listen: false);
   late final IndexedScrollController _controller;
-  late DateTime _currentDate;
-  late final Future<void> _future;
+  late DateTime _currentDate = Provider.of<DateTime>(context, listen: false);
 
   static const _monthToString = {
     1: "January",
@@ -40,23 +42,16 @@ class _HomeCalendarState extends State<HomeCalendar> {
   @override
   void initState() {
     _controller = IndexedScrollController(initialScrollOffset: -200);
-    _future = _fetchTime();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) => NotificationListener(
         onNotification: _onNotification,
-        child: FutureBuilder<void>(
-          future: _future,
-          builder: (context, snapshot) =>
-              snapshot.connectionState != ConnectionState.waiting
-                  ? Scaffold(
-                      appBar: _appBar,
-                      body: _body,
-                      extendBodyBehindAppBar: true,
-                    )
-                  : Container(),
+        child: Scaffold(
+          appBar: _appBar,
+          body: _body,
+          extendBodyBehindAppBar: true,
         ),
       );
 
@@ -72,7 +67,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
           duration: const Duration(milliseconds: 250),
           opacity: context.watch<ValueNotifier<bool>>().value ? 1 : 0,
           child: ColoredBox(
-            color: Theme.of(context).colorScheme.secondary.withAlpha(150),
+            color: Theme.of(context).colorScheme.secondary.withAlpha(200),
             child: ClipRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 10.0),
@@ -107,9 +102,16 @@ class _HomeCalendarState extends State<HomeCalendar> {
                       ),
                       const Spacer(),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () => slideRightPageTransition(
+                          context,
+                          Settings(
+                            context.read<Map<String, dynamic>>(),
+                            context.read<ThemeHandler>(),
+                          ),
+                          const Duration(milliseconds: 100),
+                        ),
                         icon: Icon(
-                          Icons.more_horiz_rounded,
+                          Icons.more_vert_rounded,
                           size: 30,
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
@@ -139,6 +141,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
           },
           child: CalendarDate(
             DateTime(_today.year, _today.month, _today.day + index),
+            _today,
           ),
         ),
         separatorBuilder: (BuildContext context, int index) => const SizedBox(
@@ -156,58 +159,4 @@ class _HomeCalendarState extends State<HomeCalendar> {
     });
     return true;
   }
-
-  Future<void> _fetchTime() async {
-    await NTP.now(timeout: const Duration(milliseconds: 3000)).then(
-      (time) {
-        _today = DateTime(time.year, time.month, time.day);
-        _currentDate = _today;
-      },
-      onError: (error, trace) async {
-        await _showErrorMessage();
-        _today = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
-        );
-        _currentDate = _today;
-      },
-    );
-  }
-
-  Future<bool?> _showErrorMessage() => Alert(
-        context: context,
-        type: AlertType.none,
-        title: 'Connection Error',
-        desc:
-            "An error occured trying to connect to the internet. The device's time will be used.",
-        style: AlertStyle(
-          animationType: AnimationType.grow,
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          alertBorder: RoundedRectangleBorder(
-            side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-          ),
-          isCloseButton: false,
-          titleStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-          descStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontSize: 15,
-          ),
-        ),
-        buttons: [
-          DialogButton(
-            height: 35,
-            radius: const BorderRadius.all(Radius.circular(8)),
-            color: Theme.of(context).colorScheme.tertiary,
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: const Text('Okay'),
-          )
-        ],
-      ).show();
 }

@@ -9,17 +9,17 @@ import 'package:hangr/pages/edit_outfit.dart';
 import 'package:hangr/pages/edit_wearable.dart';
 import 'package:hangr/services/custom_icons.dart';
 import 'package:hangr/services/outfit.dart';
+import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/no_opacity_flexible_space_bar.dart';
 import 'package:hangr/widgets/zoomable.dart';
 import 'package:hangr/widgets/zoomable_outfit.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:share_plus/share_plus.dart';
-
-enum WearbaleSortType { none, name, color, brand }
 
 enum WearableSortType { none, name, color, brand }
 
@@ -30,8 +30,7 @@ enum WardrobeMode { clothes, outfits }
 class HomeWardrobe extends StatefulWidget {
   final TabController homeTabController;
 
-  const HomeWardrobe({Key? key, required this.homeTabController})
-      : super(key: key);
+  const HomeWardrobe(this.homeTabController);
   @override
   State<HomeWardrobe> createState() => _HomeWardrobeState();
 }
@@ -336,24 +335,24 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
         IconButton(
           onPressed: () => setState(
-            () => _outfitTypeFilters.contains(OutfitType.formal)
-                ? _outfitTypeFilters.remove(OutfitType.formal)
-                : _outfitTypeFilters.add(OutfitType.formal),
+            () => _outfitTypeFilters.contains(OutfitType.semiFormal)
+                ? _outfitTypeFilters.remove(OutfitType.semiFormal)
+                : _outfitTypeFilters.add(OutfitType.semiFormal),
           ),
-          icon: const Icon(CustomIcons.formal),
-          color: _outfitTypeFilters.contains(OutfitType.formal)
+          icon: const Icon(CustomIcons.semiFormal),
+          color: _outfitTypeFilters.contains(OutfitType.semiFormal)
               ? Theme.of(context).colorScheme.tertiary
               : Theme.of(context).colorScheme.onSecondary,
           iconSize: 35,
         ),
         IconButton(
           onPressed: () => setState(
-            () => _outfitTypeFilters.contains(OutfitType.business)
-                ? _outfitTypeFilters.remove(OutfitType.business)
-                : _outfitTypeFilters.add(OutfitType.business),
+            () => _outfitTypeFilters.contains(OutfitType.formal)
+                ? _outfitTypeFilters.remove(OutfitType.formal)
+                : _outfitTypeFilters.add(OutfitType.formal),
           ),
-          icon: const Icon(CustomIcons.business),
-          color: _outfitTypeFilters.contains(OutfitType.business)
+          icon: const Icon(CustomIcons.formal),
+          color: _outfitTypeFilters.contains(OutfitType.formal)
               ? Theme.of(context).colorScheme.tertiary
               : Theme.of(context).colorScheme.onSecondary,
           iconSize: 35,
@@ -375,16 +374,13 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
 
   Widget _wardrobeAddHint() => GestureDetector(
         onTap: () {
-          if (_mode.value == WardrobeMode.clothes) {
-            widget.homeTabController.animateTo(0);
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddOutfit(_wearables, _outfits),
-              ),
-            );
-          }
+          _mode.value == WardrobeMode.clothes
+              ? widget.homeTabController.animateTo(0)
+              : slideDownPageTransition(
+                  context,
+                  AddOutfit(_wearables, _outfits),
+                  const Duration(milliseconds: 300),
+                );
         },
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -708,22 +704,15 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   ) =>
       [
         _createEditButton(
-          () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ListenableProvider<MyWearables>.value(
-                  value: _wearables,
-                  child: EditWearable(w),
-                ),
-              ),
-            );
-          },
+          () async => slideDownPageTransition(
+            context,
+            EditWearable(w, _wearables),
+            const Duration(milliseconds: 300),
+          ),
         ),
         _createShareButton(
-          () => Share.shareFiles(
-            [w.imagePath],
-            mimeTypes: ['images/jpg'],
+          () => Share.shareXFiles(
+            [XFile(w.imagePath, mimeType: 'images/jpg')],
             subject: 'Check out ${_getWearableSubjectSuffix(w)}',
             text: 'Look at my ${w.name} I got from ${w.brand}.',
           ),
@@ -744,19 +733,15 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   ) =>
       [
         _createEditButton(
-          () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EditOutfit(outfit, outfits, _wearables),
-              ),
-            );
-          },
+          () async => slideDownPageTransition(
+            context,
+            EditOutfit(outfit, _outfits, _wearables),
+            const Duration(milliseconds: 300),
+          ),
         ),
         _createShareButton(
-          () => Share.shareFiles(
-            [outfit.imagePath],
-            mimeTypes: ['images/jpg'],
+          () => Share.shareXFiles(
+            [XFile(outfit.imagePath, mimeType: 'images/jpg')],
             subject: 'Check out ${_getOutfitSubjectSuffix(outfit)}',
           ),
         ),
@@ -782,12 +767,12 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
 
   String _getOutfitSubjectSuffix(Outfit outfit) {
     switch (outfit.type) {
-      case OutfitType.business:
-        return 'my business outfit!';
-      case OutfitType.casual:
-        return 'my casual outfit!';
       case OutfitType.formal:
         return 'my formal outfit!';
+      case OutfitType.casual:
+        return 'my casual outfit!';
+      case OutfitType.semiFormal:
+        return 'my semi-formal outfit!';
       case OutfitType.athletic:
         return 'my sports outfit';
       default:

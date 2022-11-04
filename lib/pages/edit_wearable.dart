@@ -1,18 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:hangr/services/togglable_image_group.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/toggable_image.dart';
-import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class EditWearable extends StatefulWidget {
   final Wearable _wearable;
-  const EditWearable(this._wearable);
+  final MyWearables _wearables;
+  const EditWearable(this._wearable, this._wearables);
 
   @override
   State<EditWearable> createState() => _EditWearableState();
@@ -64,13 +65,21 @@ class _EditWearableState extends State<EditWearable>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              Expanded(
-                flex: 3,
-                child: SafeArea(
-                  bottom: false,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              children: [
+                IconButton(
+                  iconSize: 35,
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    CupertinoIcons.xmark_circle_fill,
+                    color: Theme.of(context).colorScheme.onSecondary,
+                  ),
+                  padding: const EdgeInsets.only(bottom: 10),
+                ),
+                Expanded(
+                  flex: 3,
                   child: ClipRRect(
                     borderRadius: const BorderRadius.all(Radius.circular(20)),
                     child: AspectRatio(
@@ -82,16 +91,17 @@ class _EditWearableState extends State<EditWearable>
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  physics:
-                      _canScroll ? null : const NeverScrollableScrollPhysics(),
-                  controller: _controller,
-                  children: _inputFields,
-                ),
-              )
-            ],
+                Expanded(
+                  child: TabBarView(
+                    physics: _canScroll
+                        ? null
+                        : const NeverScrollableScrollPhysics(),
+                    controller: _controller,
+                    children: _inputFields,
+                  ),
+                )
+              ],
+            ),
           ),
         ),
         bottomNavigationBar: IgnorePointer(
@@ -136,7 +146,7 @@ class _EditWearableState extends State<EditWearable>
                 },
                 onChanged: (text) => setState(
                   () => _canScroll =
-                      text.replaceAll(' ', '') != '' && text.isNotEmpty,
+                      text.replaceAll(' ', '') != '' || text.isEmpty,
                 ),
                 decoration: InputDecoration(
                   labelText: "name",
@@ -183,7 +193,7 @@ class _EditWearableState extends State<EditWearable>
                   controller: _brandEditingController,
                   onChanged: (text) => setState(
                     () => _canScroll =
-                        text.replaceAll(' ', '') != '' && text.isNotEmpty,
+                        text.replaceAll(' ', '') != '' || text.isEmpty,
                   ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 25),
@@ -232,7 +242,7 @@ class _EditWearableState extends State<EditWearable>
                   controller: _colorEditingController,
                   onChanged: (text) => setState(
                     () => _canScroll =
-                        text.replaceAll(' ', '') != '' && text.isNotEmpty,
+                        text.replaceAll(' ', '') != '' || text.isEmpty,
                   ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 25),
@@ -301,11 +311,11 @@ class _EditWearableState extends State<EditWearable>
 
       final image = await File(newWearable.imagePath).readAsBytes();
 
-    
-
-      await context.read<MyWearables>().removeWearable(widget._wearable);
       if (!mounted) return;
-      await context.read<MyWearables>().addWearable(newWearable);
+      await widget._wearables.removeWearable(widget._wearable);
+
+      if (!mounted) return;
+      await widget._wearables.addWearable(newWearable);
 
       if (!await File(newWearable.imagePath).exists()) {
         await File(newWearable.imagePath).writeAsBytes(image);

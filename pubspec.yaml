@@ -45,6 +45,7 @@ dependencies:
   path:
   path_provider:
   provider: ^6.0.2
+  quick_actions: ^1.0.1
   rflutter_alert: ^2.0.4
   share_plus: ^4.0.10+1
   shared_preferences: ^2.0.15
@@ -52,6 +53,7 @@ dependencies:
   uuid: ^3.0.6
   vibration: ^1.7.3
   visibility_detector: ^0.3.3
+  webview_flutter: ^3.0.4
   
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -124,3 +126,7 @@ flutter:
       - family: CustomIcons2
         fonts:
           - asset: fonts/CustomIcons2.ttf
+      - family: CustomIcons3
+        fonts:
+          - asset: fonts/CustomIcons3.ttf
+      

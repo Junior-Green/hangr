@@ -9,19 +9,24 @@ class FileHandler {
   static const _outfitsPath = 'outfits.json';
   static const _wearablesPath = 'wearables.json';
   static const _calendarMapPath = 'calendar_map.json';
+  static const _configurationsPath = 'configurations.json';
   final String _directoryPath;
 
   FileHandler(this._directoryPath);
 
-  Future<CalendarMap> readCalendarMap() async {
+  Future<Map<DateTime, List<String>>> readCalendarMap() async {
     final f = File('$_directoryPath/$_calendarMapPath');
-    CalendarMap map = CalendarMap.empty();
 
     if (await f.exists()) {
       final content = await f.readAsString();
-      map = CalendarMap.fromJson(jsonDecode(content) as Map<String, dynamic>);
+      return (json.decode(content) as Map<String, dynamic>).map(
+        (k, e) => MapEntry(
+          DateTime.parse(k),
+          (e as List<dynamic>).map((e) => e as String).toList(),
+        ),
+      );
     }
-    return map;
+    return <DateTime, List<String>>{};
   }
 
   Future<List<Outfit>> readOutfits() async {
@@ -96,9 +101,10 @@ class FileHandler {
 
   Future<bool> writeCalendarMap(CalendarMap map) async {
     try {
+      final data = map.getMap().map((k, e) => MapEntry(k.toIso8601String(), e));
       await File('$_directoryPath/$_calendarMapPath')
-          .writeAsString(json.encode(map));
-      return await File('$_directoryPath/$_calendarMapPath').exists();
+          .writeAsString(json.encode(data));
+      return File('$_directoryPath/$_calendarMapPath').exists();
     } on Exception catch (e) {
       if (kDebugMode) {
         print(e);
@@ -127,4 +133,42 @@ class FileHandler {
     }
     return true;
   }
+
+  Future<Map<String, dynamic>> readConfigMap() async {
+    final f = File('$_directoryPath/$_configurationsPath');
+
+    if (await f.exists()) {
+      final content = await f.readAsString();
+      final map = json.decode(content) as Map<String, dynamic>;
+      return {
+        'camera_quality': map['camera_quality'] as int,
+        'theme': map['theme'] as String,
+        'notifications': map['notifications'] as bool,
+        'notification_time': map['notification_time'] as String,
+        'isPremiumUser': map['isPremiumUser'] as bool
+      };
+    }
+    return _defaultConfigMap();
+  }
+
+  Future<bool> writeConfigMap(Map<String, dynamic> config) async {
+    try {
+      await File('$_directoryPath/$_configurationsPath')
+          .writeAsString(json.encode(config));
+      return File('$_directoryPath/$_configurationsPath').exists();
+    } on Exception catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+      return false;
+    }
+  }
+
+  Map<String, dynamic> _defaultConfigMap() => {
+        'camera_quality': 50,
+        'theme': 'system',
+        'notifications': false,
+        'notification_time': '0:00',
+        'isPremiumUser': false
+      };
 }

@@ -226,7 +226,6 @@ class _AddOutfitState extends State<AddOutfit> {
               border: Border(
                 bottom: BorderSide(
                   color: Theme.of(context).colorScheme.secondary,
-                  width: 2.5,
                 ),
               ),
             ),
@@ -285,16 +284,12 @@ class _AddOutfitState extends State<AddOutfit> {
   List<Widget> _getListChildren() => [
         _getSectionHeader('Headwear'),
         _getListSection(WearableType.headwear, _headwears),
-        //
         _getSectionHeader('Top'),
         _getListSection(WearableType.top, _tops),
-
         _getSectionHeader('Bottom'),
         _getListSection(WearableType.bottom, _bottoms),
-
         _getSectionHeader('Footwear'),
         _getListSection(WearableType.footwear, _footwears),
-
         _getSectionHeader('Accessories'),
         _getListSection(WearableType.accessory, _accessories),
       ];
@@ -360,7 +355,7 @@ class _AddOutfitState extends State<AddOutfit> {
   Widget _addPrompt(WearableType type, List<Wearable> wearables) =>
       GestureDetector(
         onTap: () async {
-          await _getSelection(type, wearables);
+          await _getWearableSelection(type, wearables);
         },
         child: AspectRatio(
           aspectRatio: 3 / 4,
@@ -525,7 +520,7 @@ class _AddOutfitState extends State<AddOutfit> {
     return croppedFile.readAsBytes();
   }
 
-  Future<void> _getSelection(
+  Future<void> _getWearableSelection(
     WearableType type,
     List<Wearable> wearables,
   ) async {
@@ -772,7 +767,7 @@ class _AddOutfitState extends State<AddOutfit> {
     const iconSize = 50.0;
     final labelStyle = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: 14,
+      fontSize: 12,
       color: Theme.of(context).colorScheme.onPrimary,
     );
 
@@ -823,6 +818,28 @@ class _AddOutfitState extends State<AddOutfit> {
       ),
       ToggableImage(
         Icon(
+          CustomIcons.semiFormal,
+          color: Theme.of(context).colorScheme.tertiary,
+          size: iconSize,
+        ),
+        Icon(
+          CustomIcons.semiFormal,
+          color: Theme.of(context).colorScheme.onSecondary,
+          size: iconSize,
+        ),
+        OutfitType.semiFormal,
+        Text(
+          'Semi-Formal',
+          textAlign: TextAlign.center,
+          style: labelStyle,
+        ),
+        () {
+          _setIsInfoValid();
+          _enableButton();
+        },
+      ),
+      ToggableImage(
+        Icon(
           CustomIcons.formal,
           color: Theme.of(context).colorScheme.tertiary,
           size: iconSize,
@@ -835,28 +852,6 @@ class _AddOutfitState extends State<AddOutfit> {
         OutfitType.formal,
         Text(
           'Formal',
-          textAlign: TextAlign.center,
-          style: labelStyle,
-        ),
-        () {
-          _setIsInfoValid();
-          _enableButton();
-        },
-      ),
-      ToggableImage(
-        Icon(
-          CustomIcons.business,
-          color: Theme.of(context).colorScheme.tertiary,
-          size: iconSize,
-        ),
-        Icon(
-          CustomIcons.business,
-          color: Theme.of(context).colorScheme.onSecondary,
-          size: iconSize,
-        ),
-        OutfitType.business,
-        Text(
-          'Business',
           textAlign: TextAlign.center,
           style: labelStyle,
         ),

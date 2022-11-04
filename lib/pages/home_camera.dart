@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:hangr/pages/add_wearable.dart';
+import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,9 +28,8 @@ class HomeCamera extends StatelessWidget {
       return;
     }
 
-    final XFile? image = await picker.pickImage(
-      source: source,
-    );
+    final XFile? image =
+        await picker.pickImage(source: source, imageQuality: _getQuality());
 
     if (image == null) {
       _controller.animateTo(1);
@@ -45,14 +45,13 @@ class HomeCamera extends StatelessWidget {
     // ignore: use_build_context_synchronously
     final wearables = context.read<MyWearables>();
     // ignore: use_build_context_synchronously
-    Navigator.push(
+    fadeInPageTransition(
       context,
-      MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider.value(
-          value: wearables,
-          child: AddWearable(croppedImage),
-        ),
+      ChangeNotifierProvider.value(
+        value: wearables,
+        child: AddWearable(croppedImage),
       ),
+      const Duration(milliseconds: 100),
     ).then((val) => _controller.animateTo(1));
   }
 
@@ -132,4 +131,6 @@ class HomeCamera extends StatelessWidget {
     }
     return croppedFile.readAsBytes();
   }
+
+  int? _getQuality() {}
 }

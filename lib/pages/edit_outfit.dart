@@ -260,7 +260,7 @@ class _EditOutfitState extends State<EditOutfit> {
               border: Border(
                 bottom: BorderSide(
                   color: Theme.of(context).colorScheme.secondary,
-                  width: 2.5,
+            
                 ),
               ),
             ),
@@ -786,7 +786,7 @@ class _EditOutfitState extends State<EditOutfit> {
     const iconSize = 50.0;
     final labelStyle = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: 14,
+      fontSize: 12,
       color: Theme.of(context).colorScheme.onPrimary,
     );
 
@@ -837,6 +837,28 @@ class _EditOutfitState extends State<EditOutfit> {
       ),
       ToggableImage(
         Icon(
+          CustomIcons.semiFormal,
+          color: Theme.of(context).colorScheme.tertiary,
+          size: iconSize,
+        ),
+        Icon(
+          CustomIcons.semiFormal,
+          color: Theme.of(context).colorScheme.onSecondary,
+          size: iconSize,
+        ),
+        OutfitType.semiFormal,
+        Text(
+          'Semi-Formal',
+          textAlign: TextAlign.center,
+          style: labelStyle,
+        ),
+        () {
+          _setIsInfoValid();
+          _enableButton();
+        },
+      ),
+      ToggableImage(
+        Icon(
           CustomIcons.formal,
           color: Theme.of(context).colorScheme.tertiary,
           size: iconSize,
@@ -849,28 +871,6 @@ class _EditOutfitState extends State<EditOutfit> {
         OutfitType.formal,
         Text(
           'Formal',
-          textAlign: TextAlign.center,
-          style: labelStyle,
-        ),
-        () {
-          _setIsInfoValid();
-          _enableButton();
-        },
-      ),
-      ToggableImage(
-        Icon(
-          CustomIcons.business,
-          color: Theme.of(context).colorScheme.tertiary,
-          size: iconSize,
-        ),
-        Icon(
-          CustomIcons.business,
-          color: Theme.of(context).colorScheme.onSecondary,
-          size: iconSize,
-        ),
-        OutfitType.business,
-        Text(
-          'Business',
           textAlign: TextAlign.center,
           style: labelStyle,
         ),

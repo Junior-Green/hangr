@@ -1,20 +1,17 @@
-import 'package:hangr/services/outfit.dart';
-import 'package:json_annotation/json_annotation.dart';
-part '../serializers/calendar_map.g.dart';
+import 'package:hangr/services/file_handler.dart';
 
-@JsonSerializable(explicitToJson: true)
 class CalendarMap {
-  late final Map<DateTime, Outfit> calendarMap;
+  final Map<DateTime, List<String>> _calendarMap;
+  final FileHandler _handler;
 
-  CalendarMap(this.calendarMap);
-  CalendarMap.empty() : this(<DateTime, Outfit>{});
+  CalendarMap(this._calendarMap, this._handler);
+  CalendarMap.empty(this._handler) : _calendarMap = <DateTime, List<String>>{};
 
-  Outfit? getFromDate(DateTime time) => calendarMap[time];
-  Outfit addOutfit(DateTime time, Outfit outfit) =>
-      calendarMap.putIfAbsent(time, () => outfit);
+  List<String> getOutfitFromDate(DateTime time) => _calendarMap[time] ?? [];
+  Future<void> updateOutfit(DateTime time, List<String> wearableIds) async {
+    _calendarMap[time] = wearableIds;
+    _handler.writeCalendarMap(this);
+  }
 
-  factory CalendarMap.fromJson(Map<String, dynamic> json) =>
-      _$CalendarMapFromJson(json);
-
-  Map<String, dynamic> toJson() => _$CalendarMapToJson(this);
+  Map<DateTime, List<String>> getMap() => _calendarMap;
 }

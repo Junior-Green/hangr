@@ -43,8 +43,8 @@ List<Outfit> getListOutfit() {
 CalendarMap getCalendarMap() {
   final outfits = getListOutfit();
   final map = CalendarMap.empty();
-  map.addOutfit(DateTime.now(), outfits[0]);
-  map.addOutfit(DateTime.now().add(const Duration(days: 7)), outfits[1]);
-  map.addOutfit(DateTime.now().add(const Duration(days: 30)), outfits[2]);
+  map.updateOutfit(DateTime.now(), []);
+  map.updateOutfit(DateTime.now().add(const Duration(days: 7)), []);
+  map.updateOutfit(DateTime.now().add(const Duration(days: 30)), []);
   return map;
 }

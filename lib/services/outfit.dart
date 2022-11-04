@@ -3,19 +3,18 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hangr/services/file_handler.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:path_provider/path_provider.dart';
 
 part '../serializers/outfit.g.dart';
 
 enum OutfitType {
   @JsonValue("casual")
   casual,
-  @JsonValue("formal")
-  formal,
+  @JsonValue("semi_formal")
+  semiFormal,
   @JsonValue("athletic")
   athletic,
-  @JsonValue("business")
-  business
+  @JsonValue("formal")
+  formal
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -43,12 +42,10 @@ class Outfit {
 }
 
 class MyOutfits extends ChangeNotifier {
-  late final FileHandler _handler;
+  final FileHandler _handler;
   final List<Outfit> _outfits;
 
-  MyOutfits(this._outfits) {
-    _initHandler();
-  }
+  MyOutfits(this._outfits, this._handler);
 
   Future<void> addOutfit(Outfit o) async {
     _outfits.add(o);
@@ -95,9 +92,4 @@ class MyOutfits extends ChangeNotifier {
       _outfits.indexWhere((element) => element.wearableIds.contains(id)) != -1;
 
   List<Outfit> get getOutfits => _outfits.toList();
-
-  Future<void> _initHandler() async {
-    final Directory directory = await getApplicationDocumentsDirectory();
-    _handler = FileHandler(directory.path);
-  }
 }

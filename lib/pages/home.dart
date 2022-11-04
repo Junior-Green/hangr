@@ -1,10 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hangr/pages/calendar_outfit.dart';
 import 'package:hangr/pages/home_calendar.dart';
 import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
+import 'package:hangr/services/calendar_map.dart';
+import 'package:hangr/services/custom_icons.dart';
+import 'package:hangr/services/outfit.dart';
+import 'package:hangr/services/page_transition.dart';
+import 'package:hangr/services/shortcut_items.dart';
+import 'package:hangr/services/wearable.dart';
 import 'package:provider/provider.dart';
+import 'package:quick_actions/quick_actions.dart';
+
+enum DateJump { none, today, tomorrow }
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,15 +24,16 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   late final TabController _controller;
+  DateJump _date = DateJump.none;
   final ValueNotifier<bool> _isVisible = ValueNotifier(true);
 
   @override
   void initState() {
     _controller =
         TabController(length: _tabs.length, vsync: this, initialIndex: 1);
+    _handleQuickActions();
     super.initState();
   }
-
 
   @override
   void dispose() {
@@ -39,11 +50,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             HomeCamera(_controller),
             ListenableProvider.value(
               value: _isVisible,
-              child: const HomeCalendar(),
+              child: HomeCalendar(
+                date: _date,
+              ),
             ),
-            HomeWardrobe(
-              homeTabController: _controller,
-            ),
+            HomeWardrobe(_controller),
           ],
         ),
         bottomNavigationBar: ValueListenableBuilder<bool>(
@@ -103,7 +114,54 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ),
         const Padding(
           padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
-          child: Tab(icon: Icon(CupertinoIcons.bag_fill, size: 25)),
+          child: Tab(icon: Icon(CustomIcons.hanger, size: 30)),
         )
       ];
+
+  void _handleQuickActions() {
+    const QuickActions quickActions = QuickActions();
+    quickActions.initialize((shortcutType) {
+      if (shortcutType == addClothing.type) {
+        if (_controller.index != 0) {
+          Navigator.popUntil(context, (route) => route.isFirst);
+          _controller.animateTo(0);
+        }
+      }
+      if (shortcutType == planTomorrow.type) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+        fadeInPageTransition(
+          context,
+          CalendarOutfit(
+            map: context.read<CalendarMap>(),
+            outfits: context.read<MyOutfits>(),
+            wearables: context.read<MyWearables>(),
+            date: context.read<DateTime>().add(const Duration(days: 1)),
+            isEditable: true,
+          ),
+          const Duration(milliseconds: 100),
+        );
+      }
+      if (shortcutType == planToday.type) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+        slideDownPageTransition(
+          context,
+          CalendarOutfit(
+            map: context.read<CalendarMap>(),
+            outfits: context.read<MyOutfits>(),
+            wearables: context.read<MyWearables>(),
+            date: context.read<DateTime>(),
+            isEditable: true,
+          ),
+          const Duration(milliseconds: 100),
+        );
+      }
+      if (shortcutType == viewWardrobe.type) {
+        if (_controller.index == 1) {
+          Navigator.popUntil(context, (route) => route.isFirst);
+          _controller.animateTo(2);
+        }
+      }
+    });
+    quickActions.setShortcutItems(shortcutItems);
+  }
 }

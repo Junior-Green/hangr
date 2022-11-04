@@ -28,7 +28,7 @@ Map<String, dynamic> _$OutfitToJson(Outfit instance) => <String, dynamic>{
 
 const _$OutfitTypeEnumMap = {
   OutfitType.casual: 'casual',
-  OutfitType.formal: 'formal',
+  OutfitType.semiFormal: 'semi_formal',
   OutfitType.athletic: 'athletic',
-  OutfitType.business: 'business',
+  OutfitType.formal: 'formal',
 };
