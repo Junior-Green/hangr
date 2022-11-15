@@ -19,6 +19,7 @@ enum OutfitType {
 
 @JsonSerializable(explicitToJson: true)
 class Outfit {
+  final String id;
   final String name;
   final String primaryColor;
   final String secondaryColor;
@@ -28,6 +29,7 @@ class Outfit {
   final DateTime timeMade;
 
   const Outfit(
+    this.id,
     this.wearableIds,
     this.type,
     this.name,

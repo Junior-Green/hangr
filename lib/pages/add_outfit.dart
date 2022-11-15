@@ -134,6 +134,10 @@ class _AddOutfitState extends State<AddOutfit> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
+                  splashFactory: NoSplash.splashFactory,
+                  overlayColor: const MaterialStatePropertyAll(
+                    Colors.transparent,
+                  ),
                 ),
                 child: Padding(
                   padding:
@@ -895,6 +899,7 @@ class _AddOutfitState extends State<AddOutfit> {
     }
     try {
       final newOutfit = Outfit(
+        generatedId,
         ids,
         outfitType!,
         _nameEditingController.text,

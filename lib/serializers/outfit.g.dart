@@ -7,6 +7,7 @@ part of '../services/outfit.dart';
 // **************************************************************************
 
 Outfit _$OutfitFromJson(Map<String, dynamic> json) => Outfit(
+      json['id'] as String,
       (json['wearables'] as List<dynamic>).map((e) => e as String).toList(),
       $enumDecode(_$OutfitTypeEnumMap, json['type']),
       json['name'] as String,
@@ -17,6 +18,7 @@ Outfit _$OutfitFromJson(Map<String, dynamic> json) => Outfit(
     );
 
 Map<String, dynamic> _$OutfitToJson(Outfit instance) => <String, dynamic>{
+      'id': instance.id,
       'type': _$OutfitTypeEnumMap[instance.type],
       'name': instance.name,
       'wearables': instance.wearableIds,

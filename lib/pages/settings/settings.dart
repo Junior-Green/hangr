@@ -1,20 +1,31 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hangr/pages/settings/account_settings.dart';
+import 'package:hangr/pages/settings/camera_settings.dart';
+import 'package:hangr/pages/settings/cloud_backup_settings.dart';
 import 'package:hangr/pages/settings/privacy_policy_settings.dart';
+import 'package:hangr/pages/settings/reminders_settings.dart';
 import 'package:hangr/pages/settings/theme_settings.dart';
+import 'package:hangr/services/alert.dart';
+import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/theme_handler.dart';
+import 'package:in_app_review/in_app_review.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatelessWidget {
   late final List<Widget> _settingPages;
 
-  Settings(Map<String, dynamic> configurations, ThemeHandler handler) {
+  Settings(
+    ThemeHandler handler,
+    Notifications notifications,
+  ) {
     _settingPages = <Widget>[
-      ThemeSettings(configurations, handler),
-      Container(),
-      Container(),
-      Container(),
-      Container(),
+      ThemeSettings(handler),
+      Reminders(notifications),
+      const CameraSettings(),
+      const CloudBackup(),
+      const Account(),
       Container(),
       Container(),
       const PrivacyPolicy(),
@@ -24,8 +35,8 @@ class Settings extends StatelessWidget {
   static const _settingTitles = <String>[
     'Theme',
     'Reminders',
-    'Camera Quality',
-    'iCloud Backup',
+    'Camera',
+    'Cloud Backup',
     'Account Status',
     'Rate App',
     'Send Feedback',
@@ -34,7 +45,7 @@ class Settings extends StatelessWidget {
 
   static const _settingDescriptions = <String>[
     'Change how the display of the app looks.',
-    'Select if you want reminders and what time you want them delivered to you.',
+    'Choose whether to enable reminders and what time you want them delivered.',
     'Select the resolution of photos taken by the camera when inside the app.',
     'Manage your iCloud backup settings.',
     'View and manage your account status.',
@@ -75,11 +86,21 @@ class Settings extends StatelessWidget {
 
   Widget _generateSetting(int index, BuildContext context) => GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: () => slideRightPageTransition(
-          context,
-          _settingPages[index],
-          const Duration(milliseconds: 100),
-        ),
+        onTap: () {
+          if (index == 5) {
+            _rateApp(context);
+            return;
+          }
+          if (index == 6) {
+            _sendFeedBack(context);
+            return;
+          }
+          slideRightPageTransition(
+            context,
+            _settingPages[index],
+            const Duration(milliseconds: 100),
+          );
+        },
         child: SizedBox(
           height: (MediaQuery.of(context).size.height -
                   MediaQuery.of(context).padding.top -
@@ -127,4 +148,28 @@ class Settings extends StatelessWidget {
           ),
         ),
       );
+
+  Future<void> _rateApp(BuildContext context) async {
+    final InAppReview inAppReview = InAppReview.instance;
+    await inAppReview.openStoreListing(
+      appStoreId: '6444371616',
+    );
+  }
+
+  Future<void> _sendFeedBack(BuildContext context) async {
+    final Uri params = Uri(
+      scheme: 'mailto',
+      queryParameters: {
+        'subject': 'Default Subject',
+        'body': 'Default body',
+        'email address': 'hangr.canada@gmail.com'
+      },
+    );
+    if (await canLaunchUrl(params)) {
+      await launchUrl(params);
+    } else {
+      await showMessageAlert(
+          context, 'Error', 'An error occured while trying to redirect.');
+    }
+  }
 }

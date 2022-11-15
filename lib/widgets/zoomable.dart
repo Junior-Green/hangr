@@ -12,6 +12,7 @@ abstract class Zoomable extends StatelessWidget {
   final String _subtitle;
   final String _imagePath;
   final DateTime _time;
+  final String? _bottomLabel;
   static const _aspectRatio = 3 / 4;
 
   const Zoomable(
@@ -20,6 +21,7 @@ abstract class Zoomable extends StatelessWidget {
     this._subtitle,
     this._imagePath,
     this._time,
+    this._bottomLabel,
   );
 
   @override
@@ -38,24 +40,36 @@ abstract class Zoomable extends StatelessWidget {
           HapticFeedback.mediumImpact();
           _zoom(context);
         },
-        child: ClipRRect(
-          borderRadius: const BorderRadius.all(Radius.circular(15)),
-          child: AspectRatio(
-            aspectRatio: _aspectRatio,
-            child: Image.file(
-              File(_imagePath),
-              fit: BoxFit.fill,
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(15)),
+              child: AspectRatio(
+                aspectRatio: _aspectRatio,
+                child: Image.file(
+                  File(_imagePath),
+                  fit: BoxFit.fill,
+                ),
+              ),
             ),
-          ),
+            if (_bottomLabel != null)
+              Text(
+                _bottomLabel!,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            else
+              const SizedBox.shrink()
+          ],
         ),
       );
 
   void _zoom(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenPadding = MediaQuery.of(context).padding;
-
     final dialog = Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
       backgroundColor: Colors.transparent,
       alignment: Alignment.center,
       shape: const RoundedRectangleBorder(), //this right here
@@ -89,16 +103,15 @@ abstract class Zoomable extends StatelessWidget {
             const SizedBox(
               height: 40,
             ),
-            ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(20)),
-              child: AspectRatio(
-                aspectRatio: _aspectRatio,
-                child: Image.file(
-                  File(_imagePath),
-                  fit: BoxFit.fill,
-                  height: screenHeight -
-                      screenPadding.top -
-                      screenPadding.bottom / 1.1,
+            AspectRatio(
+              aspectRatio: 3 / 4,
+              child: Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  child: Image.file(
+                    File(_imagePath),
+                    fit: BoxFit.fill,
+                  ),
                 ),
               ),
             ),
@@ -106,7 +119,7 @@ abstract class Zoomable extends StatelessWidget {
               height: 50,
             ),
             Text(
-              DateFormat.yMMMMd().add_jm().format(_time),
+              'Added: ${DateFormat.yMMMMd().format(_time)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 10,

@@ -1,4 +1,4 @@
-package com.example.hangr;
+package com.canada.hangr;
 
 import io.flutter.embedding.android.FlutterActivity;
 

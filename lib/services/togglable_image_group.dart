@@ -34,9 +34,22 @@ class ToggableImageGroup<T> extends ChangeNotifier {
       isSelected() ? _images[_selectedIndex] : null;
 
   void _buttonToggled(int index) {
-    _selectedIndex = _images[index].isToggled ? -1 : index;
+    _selectedIndex = index;
     for (var i = 0; i < _images.length; i++) {
       if (_images[i].isToggled && index != i) {
+        _images[i].toggle();
+      }
+    }
+    notifyListeners();
+  }
+
+  void setSelectedIndex(int index) {
+    _selectedIndex = index;
+    for (var i = 0; i < _images.length; i++) {
+      if (_images[i].isToggled && index != i) {
+        _images[i].toggle();
+      }
+      if (i == index && !_images[i].isToggled) {
         _images[i].toggle();
       }
     }

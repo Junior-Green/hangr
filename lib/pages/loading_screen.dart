@@ -1,11 +1,16 @@
 import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:hangr/firebase_options.dart';
 import 'package:hangr/pages/home.dart';
+import 'package:hangr/services/alert.dart';
 import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/file_handler.dart';
+import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/theme_handler.dart';
@@ -13,7 +18,7 @@ import 'package:hangr/services/wearable.dart';
 import 'package:ntp/ntp.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({Key? key}) : super(key: key);
@@ -43,21 +48,33 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   Future<void> initApp() async {
     try {
-      final Directory directory = await getApplicationDocumentsDirectory();
+      final Directory directory = await getTemporaryDirectory();
       final FileHandler handler = FileHandler(directory.path);
       final CalendarMap calendarMap =
           CalendarMap(await handler.readCalendarMap(), handler);
       final MyOutfits outfits = MyOutfits(await handler.readOutfits(), handler);
       final MyWearables wearables =
           MyWearables(await handler.readWearables(), handler);
-      final configurations = await handler.readConfigMap();
-      final date = await _fetchTime();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final DateTime date = await _fetchTime();
+      final Notifications notifications = Notifications()..initialize();
+      final String timezone = await FlutterNativeTimezone.getLocalTimezone();
+
+      await prefs.setString('time_zone', timezone);
+      prefs.setBool(
+        'is_premium_user',
+        prefs.getBool('is_premium_user') ?? false,
+      );
+
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
       if (!mounted) return;
 
       context
           .read<ThemeHandler>()
-          .setMode(_getThemeMode(configurations['theme'] as String));
+          .setMode(_getThemeMode(prefs.getString('theme') ?? 'system'));
 
       if (kDebugMode) {
         await wearables.removeAllWearables();
@@ -83,8 +100,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
         context,
         MultiProvider(
           providers: [
+            Provider.value(value: notifications),
             Provider.value(value: calendarMap),
-            Provider.value(value: configurations),
             Provider(create: (_) => DateTime(date.year, date.month, date.day)),
             ChangeNotifierProvider.value(value: wearables),
             ChangeNotifierProvider.value(value: outfits),
@@ -110,6 +127,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Shirt1',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 1),
+          ),
+          1,
         ),
         Wearable(
           '2',
@@ -119,6 +140,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Shirt2',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 2),
+          ),
+          2,
         ),
         Wearable(
           '3',
@@ -128,6 +153,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Shirt3',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 3),
+          ),
+          3,
         ),
         Wearable(
           '4',
@@ -137,6 +166,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Bottom1',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 4),
+          ),
+          4,
         ),
         Wearable(
           '5',
@@ -146,6 +179,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Bottom2',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 5),
+          ),
+          5,
         ),
         Wearable(
           '6',
@@ -155,6 +192,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Bottom3',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 6),
+          ),
+          6,
         ),
         Wearable(
           '7',
@@ -164,6 +205,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Headwear1',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 7),
+          ),
+          7,
         ),
         Wearable(
           '8',
@@ -173,6 +218,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Headwear2',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 8),
+          ),
+          8,
         ),
         Wearable(
           '9',
@@ -182,6 +231,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Headwear3',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 9),
+          ),
+          9,
         ),
         Wearable(
           '10',
@@ -191,6 +244,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Footwear1',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 10),
+          ),
+          10,
         ),
         Wearable(
           '11',
@@ -200,6 +257,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Footwear2',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 11),
+          ),
+          11,
         ),
         Wearable(
           '12',
@@ -209,6 +270,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Footwear3',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 12),
+          ),
+          12,
         ),
         Wearable(
           '13',
@@ -218,6 +283,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory1',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 3),
+          ),
+          13,
         ),
         Wearable(
           '14',
@@ -227,6 +296,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory2',
           DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 14),
+          ),
+          14,
         ),
         Wearable(
           '15',
@@ -236,7 +309,141 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-        )
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          15,
+        ),
+        Wearable(
+          '16',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          16,
+        ),
+        Wearable(
+          '17',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          17,
+        ),
+        Wearable(
+          '18',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          18,
+        ),
+        Wearable(
+          '19',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          19,
+        ),
+        Wearable(
+          '20',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          20,
+        ),
+        Wearable(
+          '21',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          21,
+        ),
+        Wearable(
+          '22',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          22,
+        ),
+        Wearable(
+          '23',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          23,
+        ),
+        Wearable(
+          '24',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          24,
+        ),
+        Wearable(
+          '25',
+          WearableType.accessory,
+          'Nike',
+          'Black',
+          directory,
+          'Accessory3',
+          DateTime.now(),
+          DateTime.now().subtract(
+            const Duration(days: 15),
+          ),
+          25,
+        ),
       ];
 
   ThemeMode _getThemeMode(String val) {
@@ -255,7 +462,11 @@ class _LoadingScreenState extends State<LoadingScreen> {
   Future<DateTime> _fetchTime() async =>
       NTP.now(timeout: const Duration(milliseconds: 3000)).onError(
         (error, stackTrace) async {
-          await _showErrorMessage(context);
+          await showMessageAlert(
+            context,
+            'Connection Error',
+            "An error occured while connecting to the internet. The device's time will be used.",
+          );
           return DateTime(
             DateTime.now().year,
             DateTime.now().month,
@@ -263,41 +474,4 @@ class _LoadingScreenState extends State<LoadingScreen> {
           );
         },
       );
-
-  Future<bool?> _showErrorMessage(BuildContext context) => Alert(
-        context: context,
-        type: AlertType.none,
-        title: 'Connection Error',
-        desc:
-            "An error occured connecting to the internet. The device's time will be used.",
-        style: AlertStyle(
-          animationType: AnimationType.grow,
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          alertBorder: RoundedRectangleBorder(
-            side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
-            borderRadius: const BorderRadius.all(Radius.circular(15)),
-          ),
-          isCloseButton: false,
-          titleStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-          descStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
-            fontSize: 15,
-          ),
-        ),
-        buttons: [
-          DialogButton(
-            height: 35,
-            margin: const EdgeInsets.symmetric(horizontal: 50),
-            radius: const BorderRadius.all(Radius.circular(10)),
-            color: Theme.of(context).colorScheme.tertiary,
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: const Text('Okay'),
-          )
-        ],
-      ).show();
 }

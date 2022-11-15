@@ -39,7 +39,7 @@ class _ToggableImageState extends State<ToggableImage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: _toggleImage,
+                onTap: !widget.isToggled ? _toggle : null,
                 child: value ? widget._toggleOn : widget._toggleOff,
               ),
               if (widget._label != null) ...[
@@ -54,7 +54,7 @@ class _ToggableImageState extends State<ToggableImage> {
         valueListenable: widget._toggled,
       );
 
-  void _toggleImage() {
+  void _toggle() {
     widget.onTap();
     widget.toggle();
   }

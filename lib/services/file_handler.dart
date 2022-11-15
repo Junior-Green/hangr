@@ -133,42 +133,4 @@ class FileHandler {
     }
     return true;
   }
-
-  Future<Map<String, dynamic>> readConfigMap() async {
-    final f = File('$_directoryPath/$_configurationsPath');
-
-    if (await f.exists()) {
-      final content = await f.readAsString();
-      final map = json.decode(content) as Map<String, dynamic>;
-      return {
-        'camera_quality': map['camera_quality'] as int,
-        'theme': map['theme'] as String,
-        'notifications': map['notifications'] as bool,
-        'notification_time': map['notification_time'] as String,
-        'isPremiumUser': map['isPremiumUser'] as bool
-      };
-    }
-    return _defaultConfigMap();
-  }
-
-  Future<bool> writeConfigMap(Map<String, dynamic> config) async {
-    try {
-      await File('$_directoryPath/$_configurationsPath')
-          .writeAsString(json.encode(config));
-      return File('$_directoryPath/$_configurationsPath').exists();
-    } on Exception catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
-      return false;
-    }
-  }
-
-  Map<String, dynamic> _defaultConfigMap() => {
-        'camera_quality': 50,
-        'theme': 'system',
-        'notifications': false,
-        'notification_time': '0:00',
-        'isPremiumUser': false
-      };
 }

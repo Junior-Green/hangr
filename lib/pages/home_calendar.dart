@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hangr/pages/home.dart';
 import 'package:hangr/pages/settings/settings.dart';
+import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/theme_handler.dart';
 import 'package:hangr/widgets/calendar_date.dart';
@@ -12,8 +12,8 @@ import 'package:provider/provider.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class HomeCalendar extends StatefulWidget {
-  final DateJump date;
-  const HomeCalendar({Key? key, required this.date}) : super(key: key);
+  final Notifications notifications;
+  const HomeCalendar({Key? key, required this.notifications}) : super(key: key);
 
   @override
   State<HomeCalendar> createState() => _HomeCalendarState();
@@ -105,8 +105,8 @@ class _HomeCalendarState extends State<HomeCalendar> {
                         onPressed: () => slideRightPageTransition(
                           context,
                           Settings(
-                            context.read<Map<String, dynamic>>(),
                             context.read<ThemeHandler>(),
+                            context.read<Notifications>(),
                           ),
                           const Duration(milliseconds: 100),
                         ),

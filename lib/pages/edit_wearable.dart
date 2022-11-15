@@ -280,7 +280,7 @@ class _EditWearableState extends State<EditWearable>
       ];
 
   Future<void> _finalize() async {
-    final wearableType = _getWearableType();
+    final WearableType? wearableType = _group.getSelectedImage()?.value;
     final newName = _nameEditingController.text.isNotEmpty
         ? _nameEditingController.text
         : widget._wearable.name;
@@ -467,27 +467,6 @@ class _EditWearableState extends State<EditWearable>
     _controller.dispose();
     _nameEditingController.dispose();
     _brandEditingController.dispose();
-  }
-
-  WearableType? _getWearableType() {
-    final textWidget = _group.getSelectedImage() == null
-        ? null
-        : _group.getSelectedImage()!.label as Text;
-
-    switch (textWidget?.data?.toLowerCase()) {
-      case 'headwear':
-        return WearableType.headwear;
-      case 'footwear':
-        return WearableType.footwear;
-      case 'bottom':
-        return WearableType.bottom;
-      case 'top':
-        return WearableType.top;
-      case 'accessory':
-        return WearableType.accessory;
-      default:
-        return null;
-    }
   }
 
   Future<void> _dialog() async => Alert(

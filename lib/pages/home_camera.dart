@@ -1,58 +1,82 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:hangr/pages/add_wearable.dart';
+import 'package:hangr/pages/hangr_pro.dart';
+import 'package:hangr/services/alert.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeCamera extends StatelessWidget {
+class HomeCamera extends StatefulWidget {
   final TabController _controller;
   const HomeCamera(this._controller);
 
   @override
+  State<HomeCamera> createState() => _HomeCameraState();
+}
+
+class _HomeCameraState extends State<HomeCamera> {
+  @override
+  void initState() {
+    super.initState();
+    _getImage(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _getImage(context));
-    return const Scaffold(
-      backgroundColor: Colors.black,
-    );
+    return Scaffold(backgroundColor: Theme.of(context).colorScheme.primary);
   }
 
   Future<void> _getImage(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final isPremiumMember = prefs.getBool('is_premium_user') ?? false;
+
+    if (!mounted) return widget._controller.animateTo(1);
+
+    final wearableCount = context.read<MyWearables>().getWearables.length;
+
+    if (!isPremiumMember && wearableCount >= 25) {
+      await HangrPro.showProDialog(
+        context,
+        'Create and store an unlimited amount of clothing with Hangr Pro.',
+      );
+      return widget._controller.animateTo(1);
+    }
+
     final ImagePicker picker = ImagePicker();
     final ImageSource? source = await _getImageSource(context);
-    if (source == null) {
-      _controller.animateTo(1);
+    if (source == null || !mounted) {
+      widget._controller.animateTo(1);
       return;
     }
 
-    final XFile? image =
-        await picker.pickImage(source: source, imageQuality: _getQuality());
+    final XFile? image = await picker.pickImage(
+        source: source, imageQuality: prefs.getInt('camera_quality') ?? 50);
 
-    if (image == null) {
-      _controller.animateTo(1);
+    if (image == null || !mounted) {
+      widget._controller.animateTo(1);
       return;
     }
-    // ignore: use_build_context_synchronously
+
     final croppedImage = await _cropImage(image.path, context);
 
-    if (croppedImage == null) {
-      _controller.animateTo(1);
+    if (croppedImage == null || !mounted) {
+      widget._controller.animateTo(1);
       return;
     }
-    // ignore: use_build_context_synchronously
-    final wearables = context.read<MyWearables>();
-    // ignore: use_build_context_synchronously
-    fadeInPageTransition(
+
+    await fadeInPageTransition(
       context,
       ChangeNotifierProvider.value(
-        value: wearables,
+        value: context.read<MyWearables>(),
         child: AddWearable(croppedImage),
       ),
       const Duration(milliseconds: 100),
-    ).then((val) => _controller.animateTo(1));
+    ).then((val) => widget._controller.animateTo(1));
   }
 
   Future<ImageSource?> _getImageSource(BuildContext context) async {
@@ -88,7 +112,10 @@ class HomeCamera extends StatelessWidget {
             source = ImageSource.gallery;
             Navigator.of(context, rootNavigator: true).pop();
           },
-          child: const Text('Choose Photo'),
+          child: const Text(
+            'Choose Photo',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         DialogButton(
           height: 35,
@@ -98,7 +125,10 @@ class HomeCamera extends StatelessWidget {
             source = ImageSource.camera;
             Navigator.of(context, rootNavigator: true).pop();
           },
-          child: const Text('Take Photo'),
+          child: const Text(
+            'Take Photo',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         )
       ],
     ).show();
@@ -131,6 +161,4 @@ class HomeCamera extends StatelessWidget {
     }
     return croppedFile.readAsBytes();
   }
-
-  int? _getQuality() {}
 }

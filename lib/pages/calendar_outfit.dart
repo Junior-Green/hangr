@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:hangr/services/calendar_map.dart';
+import 'package:hangr/services/custom_icons.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
@@ -71,7 +72,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                 onPressed: _getOutfitSelection,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 backgroundColor: Theme.of(context).colorScheme.tertiary,
-                child: const Icon(CupertinoIcons.bag_fill, size: 25),
+                child: const Icon(CustomIcons.hanger, size: 25),
               )
             : null,
       );
@@ -100,10 +101,10 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                       icon: const Icon(CupertinoIcons.back),
                     ),
                     const Spacer(
-                      flex: 3,
+                      flex: 4,
                     ),
                     Expanded(
-                      flex: 3,
+                      flex: 5,
                       child: SizedBox(
                         width: double.infinity,
                         child: Text(
@@ -119,7 +120,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                       ),
                     ),
                     const Spacer(
-                      flex: 4,
+                      flex: 6,
                     ),
                   ],
                 ),
@@ -195,6 +196,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                                 ),
                               ),
                               onPressed: () => setState(() {
+                                w.decrementTimeWorn();
                                 wearables.remove(w);
                               }),
                               trailingIcon: const Icon(
@@ -265,7 +267,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
             child: GestureDetector(
               onTap: () => setState(() {
                 wearables.add(e);
-
+                e.incrementTimeWorn();
                 Navigator.pop(context);
               }),
               child: AspectRatio(

@@ -260,7 +260,6 @@ class _EditOutfitState extends State<EditOutfit> {
               border: Border(
                 bottom: BorderSide(
                   color: Theme.of(context).colorScheme.secondary,
-            
                 ),
               ),
             ),
@@ -909,6 +908,7 @@ class _EditOutfitState extends State<EditOutfit> {
 
     try {
       final newOutfit = Outfit(
+        widget._outfit.id,
         ids.toList(),
         outfitType!,
         _nameEditingController.text,

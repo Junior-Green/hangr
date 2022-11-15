@@ -16,11 +16,10 @@
 import 'package:flutter/widgets.dart';
 
 class CustomIcons {
-  CustomIcons._();
-
   static const _kFontFam = 'CustomIcons';
   static const _kFontFam2 = 'CustomIcons2';
   static const _kFontFam3 = 'CustomIcons3';
+  static const _kFontFam4 = 'CustomIcons4';
 
   static const IconData accessory = IconData(0xe800, fontFamily: _kFontFam);
   static const IconData bottom = IconData(0xe801, fontFamily: _kFontFam);
@@ -31,4 +30,5 @@ class CustomIcons {
   static const IconData formal = IconData(0xe801, fontFamily: _kFontFam2);
   static const IconData semiFormal = IconData(0xe802, fontFamily: _kFontFam2);
   static const IconData hanger = IconData(0xe800, fontFamily: _kFontFam3);
+  static const IconData logo = IconData(0xe800, fontFamily: _kFontFam4);
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 import 'dart:collection';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
@@ -7,6 +9,7 @@ import 'package:focused_menu/modals.dart';
 import 'package:hangr/pages/add_outfit.dart';
 import 'package:hangr/pages/edit_outfit.dart';
 import 'package:hangr/pages/edit_wearable.dart';
+import 'package:hangr/pages/hangr_pro.dart';
 import 'package:hangr/services/custom_icons.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
@@ -16,12 +19,14 @@ import 'package:hangr/widgets/zoomable.dart';
 import 'package:hangr/widgets/zoomable_outfit.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-enum WearableSortType { none, name, color, brand }
+enum WearableSortType { none, name, color, brand, timesWorn, lastWorn }
 
 enum OutfitSortType { none, name, primaryColor, secondaryColor }
 
@@ -247,7 +252,8 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   SliverPadding _createSliverGrid(WardrobeMode mode) => SliverPadding(
         padding: const EdgeInsets.all(10),
         sliver: SliverGrid.count(
-          childAspectRatio: 3 / 4,
+          childAspectRatio:
+              _wearableSortType == WearableSortType.none ? 3 / 4 : 9 / 13,
           mainAxisSpacing: 5,
           crossAxisSpacing: 5,
           crossAxisCount: 3,
@@ -373,14 +379,31 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
       ];
 
   Widget _wardrobeAddHint() => GestureDetector(
-        onTap: () {
-          _mode.value == WardrobeMode.clothes
-              ? widget.homeTabController.animateTo(0)
-              : slideDownPageTransition(
-                  context,
-                  AddOutfit(_wearables, _outfits),
-                  const Duration(milliseconds: 300),
-                );
+        onTap: () async {
+          if (_mode.value == WardrobeMode.clothes) {
+            widget.homeTabController.animateTo(0);
+          } else {
+            final prefs = await SharedPreferences.getInstance();
+            final isPremiumMember = prefs.getBool('is_premium_member') ?? false;
+            final outfitCount = _outfits.getOutfits.length;
+
+            if (!mounted) return;
+
+            if (!isPremiumMember || outfitCount >= 7) {
+              await HangrPro.showProDialog(
+                context,
+                'Create and store an unlimited amount of outfits with Hangr Pro',
+              );
+              return;
+            }
+
+            if (!mounted) return;
+            slideDownPageTransition(
+              context,
+              AddOutfit(_wearables, _outfits),
+              const Duration(milliseconds: 300),
+            );
+          }
         },
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -401,7 +424,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
       );
 
-  List<Zoomable> _getWearables() {
+  List<Widget> _getWearables() {
     final filteredList = _wearables.getWearables
         .where(
           (element) =>
@@ -420,16 +443,17 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
       ..sort(_wearableComparator);
 
     return filteredList
-        .map<ZoomableWearable>(
+        .map<Widget>(
           (wearable) => ZoomableWearable(
             _getWearableMenuOptions(wearable, _outfits),
             wearable,
+            _getWearableFilterLabel(wearable, _wearableSortType),
           ),
         )
         .toList();
   }
 
-  List<Zoomable> _getOutfits() {
+  List<Widget> _getOutfits() {
     final filteredList = _outfits.getOutfits
         .where(
           (element) =>
@@ -620,6 +644,22 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
+            ),
+            Center(
+              child: Text(
+                'Times Worn',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
+            Center(
+              child: Text(
+                'Date Last Worn',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
             )
           ]
         : [
@@ -672,6 +712,20 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         return _sortDown
             ? a.primaryColor.compareTo(b.primaryColor)
             : a.primaryColor.compareTo(b.primaryColor) * -1;
+      case WearableSortType.lastWorn:
+        if (a.last == null)
+          return _sortDown ? 1 : -1;
+        else if (b.last == null)
+          return _sortDown ? 1 : -1;
+        else {
+          final res = a.last!.isAfter(b.last!) ? 1 : -1;
+          return _sortDown ? res * -1 : res;
+        }
+
+      case WearableSortType.timesWorn:
+        return _sortDown
+            ? a.times.compareTo(b.times)
+            : a.times.compareTo(b.times) * -1;
       default:
         return 0;
     }
@@ -863,6 +917,12 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
       case 3:
         _wearableSortType = WearableSortType.brand;
         break;
+      case 4:
+        _wearableSortType = WearableSortType.timesWorn;
+        break;
+      case 5:
+        _wearableSortType = WearableSortType.lastWorn;
+        break;
       default:
         _wearableSortType = WearableSortType.none;
         break;
@@ -920,4 +980,27 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           )
         ],
       ).show();
+
+  String? _getWearableFilterLabel(
+    Wearable w,
+    WearableSortType wearableSortType,
+  ) {
+    switch (wearableSortType) {
+      case WearableSortType.none:
+        return null;
+      case WearableSortType.name:
+        return w.name;
+      case WearableSortType.color:
+        return w.primaryColor;
+
+      case WearableSortType.brand:
+        return w.brand;
+      case WearableSortType.timesWorn:
+        return w.timesWorn.toString();
+      case WearableSortType.lastWorn:
+        return w.last == null
+            ? 'Not worn'
+            : DateFormat().add_yMd().format(w.last!);
+    }
+  }
 }

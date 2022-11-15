@@ -7,14 +7,13 @@ import 'package:hangr/pages/home_camera.dart';
 import 'package:hangr/pages/home_wardrobe.dart';
 import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/custom_icons.dart';
+import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/shortcut_items.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
-
-enum DateJump { none, today, tomorrow }
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -24,7 +23,6 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   late final TabController _controller;
-  DateJump _date = DateJump.none;
   final ValueNotifier<bool> _isVisible = ValueNotifier(true);
 
   @override
@@ -50,9 +48,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             HomeCamera(_controller),
             ListenableProvider.value(
               value: _isVisible,
-              child: HomeCalendar(
-                date: _date,
-              ),
+              child: HomeCalendar(notifications: context.read<Notifications>()),
             ),
             HomeWardrobe(_controller),
           ],

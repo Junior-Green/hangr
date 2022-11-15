@@ -28,16 +28,28 @@ class Wearable {
   final String primaryColor;
   final String imagePath;
   final DateTime timeTaken;
+  DateTime? last;
+  int times = 0;
 
-  const Wearable(
+  Wearable(
     this.id,
     this.type,
     this.brand,
     this.primaryColor,
     this.imagePath,
     this.name,
-    this.timeTaken,
-  );
+    this.timeTaken, [
+    this.last,
+    this.times = 0,
+  ]);
+
+  void incrementTimeWorn() => times++;
+  void decrementTimeWorn() => times--;
+
+  set lastWorn(DateTime? time) => last;
+
+  DateTime? get lastWorn => last;
+  int get timesWorn => times;
 
   factory Wearable.fromJson(Map<String, dynamic> json) =>
       _$WearableFromJson(json);

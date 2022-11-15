@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "562433583187",
+    "project_id": "hangr-fc824",
+    "storage_bucket": "hangr-fc824.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:562433583187:android:a85ba63bb345c6c4ad7ea6",
+        "android_client_info": {
+          "package_name": "com.canada.hangr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "562433583187-hc7qlhr4a7n46du6n6henvmpcbaik4p2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMbXCYJLsUf_JwE8Ok3MSlz5cP6DwsJYY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "562433583187-hc7qlhr4a7n46du6n6henvmpcbaik4p2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
