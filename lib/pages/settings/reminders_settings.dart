@@ -89,7 +89,9 @@ class _RemindersState extends State<Reminders> {
                                       .clearAllNotifications();
                                 }
                                 await prefs.setBool(
-                                    'notifications', _isToggled);
+                                  'notifications',
+                                  _isToggled,
+                                );
                                 setState(() {});
                               },
                             ),

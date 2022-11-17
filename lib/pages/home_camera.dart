@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:hangr/pages/add_wearable.dart';
 import 'package:hangr/pages/hangr_pro.dart';
-import 'package:hangr/services/alert.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -55,7 +54,9 @@ class _HomeCameraState extends State<HomeCamera> {
     }
 
     final XFile? image = await picker.pickImage(
-        source: source, imageQuality: prefs.getInt('camera_quality') ?? 50);
+      source: source,
+      imageQuality: prefs.getInt('camera_quality') ?? 50,
+    );
 
     if (image == null || !mounted) {
       widget._controller.animateTo(1);
@@ -114,7 +115,7 @@ class _HomeCameraState extends State<HomeCamera> {
           },
           child: const Text(
             'Choose Photo',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
         DialogButton(
@@ -127,7 +128,7 @@ class _HomeCameraState extends State<HomeCamera> {
           },
           child: const Text(
             'Take Photo',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
         )
       ],

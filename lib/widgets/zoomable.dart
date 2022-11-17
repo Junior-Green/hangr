@@ -41,14 +41,17 @@ abstract class Zoomable extends StatelessWidget {
           _zoom(context);
         },
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(15)),
-              child: AspectRatio(
-                aspectRatio: _aspectRatio,
-                child: Image.file(
-                  File(_imagePath),
-                  fit: BoxFit.fill,
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(15)),
+                child: AspectRatio(
+                  aspectRatio: _aspectRatio,
+                  child: Image.file(
+                    File(_imagePath),
+                    fit: BoxFit.fill,
+                  ),
                 ),
               ),
             ),
@@ -105,13 +108,11 @@ abstract class Zoomable extends StatelessWidget {
             ),
             AspectRatio(
               aspectRatio: 3 / 4,
-              child: Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  child: Image.file(
-                    File(_imagePath),
-                    fit: BoxFit.fill,
-                  ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
+                child: Image.file(
+                  File(_imagePath),
+                  fit: BoxFit.fill,
                 ),
               ),
             ),

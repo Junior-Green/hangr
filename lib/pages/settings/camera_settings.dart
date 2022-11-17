@@ -60,7 +60,9 @@ class _CameraSettingsState extends State<CameraSettings> {
                       const Text(
                         'Photo Quality',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(
                         height: 10,

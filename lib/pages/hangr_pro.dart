@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hangr/services/alert.dart';
 import 'package:hangr/services/custom_icons.dart';
+import 'package:hangr/services/firebase.dart' as fb;
 
 // ignore: avoid_classes_with_only_static_members
 class HangrPro {
@@ -189,13 +191,7 @@ class HangrPro {
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
-                _generateFeatureHighlight(
-                  context,
-                  'No Subscriptions',
-                  'Enjoy the benefits of Hangr Pro forever after only one purchase.',
-                  CupertinoIcons.time,
-                ),
+                const SizedBox(height: 60),
                 _generateFeatureHighlight(
                   context,
                   'Ultra Quality Photos',
@@ -210,8 +206,8 @@ class HangrPro {
                 ),
                 _generateFeatureHighlight(
                   context,
-                  'iCloud Storage',
-                  'Keep a backup of your wardrobe on iCloud in case anything goes wrong.',
+                  'Cloud Storage',
+                  'Keep a backup of your wardrobe on the Cloud in case anything goes wrong.',
                   CupertinoIcons.cloud,
                 ),
               ],
@@ -247,7 +243,18 @@ class HangrPro {
                       height: 5,
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        if (fb.user == null) {
+                          await showMessageAlert(
+                            context,
+                            'Login Required',
+                            'You must be logged into an existing account to upgrade to Hangr Pro.',
+                          );
+
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        }
+                      },
                       style: ButtonStyle(
                         backgroundColor: MaterialStatePropertyAll(
                           Theme.of(context).colorScheme.tertiary,

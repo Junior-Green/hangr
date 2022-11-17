@@ -9,7 +9,6 @@ class FileHandler {
   static const _outfitsPath = 'outfits.json';
   static const _wearablesPath = 'wearables.json';
   static const _calendarMapPath = 'calendar_map.json';
-  static const _configurationsPath = 'configurations.json';
   final String _directoryPath;
 
   FileHandler(this._directoryPath);

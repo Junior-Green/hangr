@@ -405,22 +405,20 @@ class _AddOutfitState extends State<AddOutfit> {
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: Image.memory(_outfitImage!, fit: BoxFit.fill),
                     )
-                  : Expanded(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(20)),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.secondary,
-                            width: 2.5,
-                          ),
+                  : DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.secondary,
+                          width: 2.5,
                         ),
-                        child: Center(
-                          child: Icon(
-                            Icons.add_a_photo_rounded,
-                            color: Theme.of(context).colorScheme.secondary,
-                            size: 60,
-                          ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.add_a_photo_rounded,
+                          color: Theme.of(context).colorScheme.secondary,
+                          size: 60,
                         ),
                       ),
                     ),
@@ -480,7 +478,10 @@ class _AddOutfitState extends State<AddOutfit> {
             source = ImageSource.gallery;
             Navigator.of(context, rootNavigator: true).pop();
           },
-          child: const Text('Choose Photo'),
+          child: const Text(
+            'Choose Photo',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
         DialogButton(
           height: 35,
@@ -490,7 +491,10 @@ class _AddOutfitState extends State<AddOutfit> {
             source = ImageSource.camera;
             Navigator.of(context, rootNavigator: true).pop();
           },
-          child: const Text('Take Photo'),
+          child: const Text(
+            'Take Photo',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         )
       ],
     ).show();

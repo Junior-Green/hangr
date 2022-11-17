@@ -60,7 +60,9 @@ class _ThemeSettingsState extends State<ThemeSettings> {
                       const Text(
                         'Theme Mode',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(
                         height: 10,

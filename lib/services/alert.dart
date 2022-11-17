@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
@@ -14,9 +15,15 @@ Future<bool?> showMessageAlert(
       style: AlertStyle(
         isOverlayTapDismiss: false,
         animationType: AnimationType.grow,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+        backgroundColor:
+            Theme.of(context).colorScheme.brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.secondary
+                : Colors.white,
         alertBorder: RoundedRectangleBorder(
-          side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.tertiary,
+            width: 2.0,
+          ),
           borderRadius: const BorderRadius.all(Radius.circular(15)),
         ),
         isCloseButton: false,
@@ -38,7 +45,10 @@ Future<bool?> showMessageAlert(
           onPressed: () {
             Navigator.of(context, rootNavigator: true).pop();
           },
-          child: const Text('Okay'),
+          child: const Text(
+            'Okay',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
         )
       ],
     ).show();

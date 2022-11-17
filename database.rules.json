@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        "is_pro_member": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid",
+          ".validate": "newData.isBoolean()"
+        }
+      }
+    }
+  }
+}

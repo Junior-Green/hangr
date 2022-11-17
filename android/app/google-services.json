@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "562433583187",
+    "firebase_url": "https://hangr-fc824-default-rtdb.firebaseio.com",
     "project_id": "hangr-fc824",
     "storage_bucket": "hangr-fc824.appspot.com"
   },
@@ -29,6 +30,13 @@
             {
               "client_id": "562433583187-hc7qlhr4a7n46du6n6henvmpcbaik4p2.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "562433583187-djha2s62vbbaf86osftpckm1gpfopsd9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.canada.hang"
+              }
             }
           ]
         }

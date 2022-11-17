@@ -11,6 +11,7 @@ import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/theme_handler.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatelessWidget {
@@ -21,11 +22,11 @@ class Settings extends StatelessWidget {
     Notifications notifications,
   ) {
     _settingPages = <Widget>[
+      const Account(),
       ThemeSettings(handler),
       Reminders(notifications),
       const CameraSettings(),
       const CloudBackup(),
-      const Account(),
       Container(),
       Container(),
       const PrivacyPolicy(),
@@ -33,33 +34,33 @@ class Settings extends StatelessWidget {
   }
 
   static const _settingTitles = <String>[
+    'Account Status',
     'Theme',
     'Reminders',
     'Camera',
     'Cloud Backup',
-    'Account Status',
     'Rate App',
     'Send Feedback',
     'Privacy Policy',
   ];
 
   static const _settingDescriptions = <String>[
+    'View and manage your account.',
     'Change how the display of the app looks.',
     'Choose whether to enable reminders and what time you want them delivered.',
     'Select the resolution of photos taken by the camera when inside the app.',
-    'Manage your iCloud backup settings.',
-    'View and manage your account status.',
+    'Manage your cloud backup settings.',
     'Leave a review for the app.',
     'Send feedback on the app related to bugs, issues, and features you would like to see.',
     'Read our privacy policy.'
   ];
 
   static const _settingIcons = <IconData>[
+    CupertinoIcons.person,
     CupertinoIcons.brightness,
     CupertinoIcons.bell,
     CupertinoIcons.camera,
     CupertinoIcons.cloud,
-    CupertinoIcons.person,
     CupertinoIcons.star,
     CupertinoIcons.text_bubble,
     CupertinoIcons.info
@@ -150,26 +151,32 @@ class Settings extends StatelessWidget {
       );
 
   Future<void> _rateApp(BuildContext context) async {
+    const appStoreId = '6444371616';
     final InAppReview inAppReview = InAppReview.instance;
     await inAppReview.openStoreListing(
-      appStoreId: '6444371616',
+      appStoreId: appStoreId,
     );
   }
 
   Future<void> _sendFeedBack(BuildContext context) async {
+    final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    final String appName = packageInfo.appName;
+    final String version = packageInfo.version;
+
     final Uri params = Uri(
       scheme: 'mailto',
-      queryParameters: {
-        'subject': 'Default Subject',
-        'body': 'Default body',
-        'email address': 'hangr.canada@gmail.com'
-      },
+      path: 'hangr.canada@gmail.com',
+      query: 'subject=$appName Feedback version - $version&body=',
     );
     if (await canLaunchUrl(params)) {
       await launchUrl(params);
     } else {
+      // ignore: use_build_context_synchronously
       await showMessageAlert(
-          context, 'Error', 'An error occured while trying to redirect.');
+        context,
+        'Error',
+        'An error occured while trying to open the mail app.',
+      );
     }
   }
 }

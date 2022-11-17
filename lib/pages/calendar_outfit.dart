@@ -70,7 +70,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
         floatingActionButton: widget.isEditable
             ? FloatingActionButton(
                 onPressed: _getOutfitSelection,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                foregroundColor: Colors.white,
                 backgroundColor: Theme.of(context).colorScheme.tertiary,
                 child: const Icon(CustomIcons.hanger, size: 25),
               )
@@ -132,7 +132,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
       );
 
   Widget get _body => Padding(
-        padding: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.only(top: 10, left: 10),
         child: Center(
           child: ListView(
             children: _getListChildren(),

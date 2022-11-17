@@ -54,6 +54,7 @@ class DefaultFirebaseOptions {
     appId: '1:562433583187:android:a85ba63bb345c6c4ad7ea6',
     messagingSenderId: '562433583187',
     projectId: 'hangr-fc824',
+    databaseURL: 'https://hangr-fc824-default-rtdb.firebaseio.com',
     storageBucket: 'hangr-fc824.appspot.com',
   );
 
@@ -62,6 +63,7 @@ class DefaultFirebaseOptions {
     appId: '1:562433583187:ios:4054198b5768fcd8ad7ea6',
     messagingSenderId: '562433583187',
     projectId: 'hangr-fc824',
+    databaseURL: 'https://hangr-fc824-default-rtdb.firebaseio.com',
     storageBucket: 'hangr-fc824.appspot.com',
     iosClientId: '562433583187-i5sb89g0uk199t3b0kg8u7f9u5bfbqb6.apps.googleusercontent.com',
     iosBundleId: 'com.canada.hangr',

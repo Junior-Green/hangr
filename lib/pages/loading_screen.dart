@@ -1,15 +1,16 @@
 import 'dart:io';
-import 'package:firebase_core/firebase_core.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:hangr/firebase_options.dart';
 import 'package:hangr/pages/home.dart';
 import 'package:hangr/services/alert.dart';
 import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/file_handler.dart';
+import 'package:hangr/services/firebase.dart' as fb;
 import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
@@ -27,6 +28,7 @@ class LoadingScreen extends StatefulWidget {
   _LoadingScreenState createState() => _LoadingScreenState();
 }
 
+//TODO: TEST LOGIN ON MULTIPLE DEVICES
 class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
@@ -60,14 +62,20 @@ class _LoadingScreenState extends State<LoadingScreen> {
       final Notifications notifications = Notifications()..initialize();
       final String timezone = await FlutterNativeTimezone.getLocalTimezone();
 
+      try {
+        await fb.initializeFireBase();
+        await fb.user?.getIdTokenResult(true);
+      } on FirebaseAuthException catch (e) {
+        if (kDebugMode) {
+          print(e);
+          print(e.code);
+        }
+      }
+
       await prefs.setString('time_zone', timezone);
       prefs.setBool(
         'is_premium_user',
         prefs.getBool('is_premium_user') ?? false,
-      );
-
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
       );
 
       if (!mounted) return;
@@ -77,6 +85,14 @@ class _LoadingScreenState extends State<LoadingScreen> {
           .setMode(_getThemeMode(prefs.getString('theme') ?? 'system'));
 
       if (kDebugMode) {
+        try {
+          //FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+          await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+        } catch (e) {
+          // ignore: avoid_print
+          print(e);
+        }
+
         await wearables.removeAllWearables();
         await outfits.removeAllOutfits();
         final ByteData byteData =

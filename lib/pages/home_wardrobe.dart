@@ -15,7 +15,6 @@ import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:hangr/widgets/no_opacity_flexible_space_bar.dart';
-import 'package:hangr/widgets/zoomable.dart';
 import 'package:hangr/widgets/zoomable_outfit.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:image_picker/image_picker.dart';
@@ -79,9 +78,8 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
                   (BuildContext context, bool innerBoxScrolled) => <Widget>[
                 _createSilverAppBar1(),
                 _createSilverAppBar2(value),
-                _createSliverGrid(value)
               ],
-              body: Container(),
+              body: _createGrid(value),
             ),
             valueListenable: _mode,
           ),
@@ -249,9 +247,9 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         ),
       );
 
-  SliverPadding _createSliverGrid(WardrobeMode mode) => SliverPadding(
-        padding: const EdgeInsets.all(10),
-        sliver: SliverGrid.count(
+  Widget _createGrid(WardrobeMode mode) => Padding(
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+        child: GridView.count(
           childAspectRatio:
               _wearableSortType == WearableSortType.none ? 3 / 4 : 9 / 13,
           mainAxisSpacing: 5,
@@ -389,7 +387,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
 
             if (!mounted) return;
 
-            if (!isPremiumMember || outfitCount >= 7) {
+            if (!isPremiumMember && outfitCount >= 7) {
               await HangrPro.showProDialog(
                 context,
                 'Create and store an unlimited amount of outfits with Hangr Pro',
