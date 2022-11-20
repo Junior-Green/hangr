@@ -2,9 +2,9 @@
   "rules": {
     "users": {
       "$uid": {
-        "is_pro_member": {
-          ".read": "$uid === auth.uid",
-          ".write": "$uid === auth.uid",
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        "is_premium_member": {
           ".validate": "newData.isBoolean()"
         }
       }

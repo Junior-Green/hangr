@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import flutter_local_notifications
+import Firebase
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -10,6 +11,7 @@ import flutter_local_notifications
   ) -> Bool {
     
      FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
+        FirebaseApp.configure()
         GeneratedPluginRegistrant.register(with: registry)
     }
 

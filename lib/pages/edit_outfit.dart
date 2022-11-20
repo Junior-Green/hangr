@@ -433,6 +433,7 @@ class _EditOutfitState extends State<EditOutfit> {
               onTap: () async {
                 await _getImage();
                 _enableButton();
+                setState(() {});
               },
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(20)),

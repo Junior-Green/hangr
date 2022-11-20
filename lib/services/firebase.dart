@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hangr/firebase_options.dart';
@@ -12,43 +13,67 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 Future<void> initializeFireBase() async {
   await Firebase.initializeApp(
+    name: 'hangr-fc824',
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseDatabase.instance.setPersistenceEnabled(true);
 
-  FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-    if (user == null) {
-      print('User is currently signed out!');
-      await _handleUserSignOut();
-    } else {
-      //TODO: make query to firestore and check if they are premium. If they are set prefs to proper config.
+  FirebaseAuth.instance
+      .authStateChanges()
+      .listen((User? user) async => _userHandler(user));
+
+  FirebaseAuth.instance
+      .idTokenChanges()
+      .listen((User? user) async => _userHandler(user));
+
+  FirebaseAuth.instance
+      .userChanges()
+      .listen((User? user) async => _userHandler(user));
+
+  if (FirebaseAuth.instance.currentUser != null) {
+    final prefs = await SharedPreferences.getInstance();
+    final ref = FirebaseDatabase.instance
+        .ref('users/${FirebaseAuth.instance.currentUser!.uid}');
+    final snap = await ref.get();
+    print(snap.children.toString());
+    if (kDebugMode) {
       print('User is signed in!');
-      _handleUserSignIn();
     }
+    await ref.keepSynced(true);
+    ref.onValue.listen((DatabaseEvent event) async {
+      final isMemberSnapshot = event.snapshot.child('is_premium_member');
+      print(event.snapshot.toString());
 
-    FirebaseAuth.instance.idTokenChanges().listen((User? user) async {
-      if (user == null) {
-        print('User is currently signed out!');
+      if (!isMemberSnapshot.exists) {
+        await ref.update(
+          {"is_premium_memeber": false},
+        );
         await _handleUserSignOut();
+      } else if (isMemberSnapshot.value as bool? ?? false) {
+        await prefs.setBool('is_premium_member', true);
       } else {
-        //TODO: make query to firestore and check if they are premium. If they are set prefs to proper config.
-        print('User is signed in!');
-
-        _handleUserSignIn();
+        await prefs.setBool('is_premium_member', false);
       }
     });
+  }
+}
 
-    FirebaseAuth.instance.userChanges().listen((User? user) async {
-      if (user == null) {
-        print('User is currently signed out!');
-        await _handleUserSignOut();
-      } else {
-        //TODO: make query to firestore and check if they are premium. If they are set prefs to proper config.
-        print('User is signed in!');
+Future<void> _userHandler(User? user) async {
+  if (user == null) {
+    await _handleUserSignOut();
+  } else {}
+}
 
-        await _handleUserSignIn();
-      }
-    });
-  });
+Future<void> _handleUserSignOut() async {
+  final prefs = await SharedPreferences.getInstance();
+  prefs.setBool('is_premium_member', false);
+  if ((prefs.getInt('camera_quality') ?? 0) == 100) {
+    await prefs.setInt('camera_quality', 75);
+  }
+  prefs.setBool('backup', false);
+  if (kDebugMode) {
+    print('User is currently signed out!');
+  }
 }
 
 User? get user => FirebaseAuth.instance.currentUser;
@@ -116,19 +141,6 @@ Future<AuthCredential> _getAppleCredential() async {
     idToken: appleCredential.identityToken,
     rawNonce: rawNonce,
   );
-}
-
-Future<void> _handleUserSignIn() async {}
-
-Future<void> _handleUserSignOut() async {
-  final prefs = await SharedPreferences.getInstance();
-  prefs.setBool('is_premium_member', false);
-  if ((prefs.getInt('camera_quality') ?? 0) == 100) {
-    await prefs.setInt('camera_quality', 75);
-  }
-  if (prefs.getBool('backup') ?? false) {
-    prefs.setBool('backup', false);
-  }
 }
 
 String _generateNonce([int length = 32]) {

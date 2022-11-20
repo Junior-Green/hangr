@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -62,6 +63,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       final Notifications notifications = Notifications()..initialize();
       final String timezone = await FlutterNativeTimezone.getLocalTimezone();
 
+
       try {
         await fb.initializeFireBase();
         await fb.user?.getIdTokenResult(true);
@@ -86,7 +88,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
       if (kDebugMode) {
         try {
-          //FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+          FirebaseDatabase.instance.useDatabaseEmulator('localhost', 9000);
           await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
         } catch (e) {
           // ignore: avoid_print
@@ -103,11 +105,11 @@ class _LoadingScreenState extends State<LoadingScreen> {
           byteData.buffer
               .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
         );
-        final List<Wearable> wearablesToAdd =
-            _getWearables('${directory.path}/shirt.jpg');
-        for (final w in wearablesToAdd) {
-          wearables.addWearable(w);
-        }
+        // final List<Wearable> wearablesToAdd =
+        //     _getWearables('${directory.path}/shirt.jpg');
+        // for (final w in wearablesToAdd) {
+        //   wearables.addWearable(w);
+        // }
       }
 
       if (!mounted) return;

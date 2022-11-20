@@ -1,6 +1,7 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'dart:collection';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,20 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
     _textController = TextEditingController();
     _scrollController = FixedExtentScrollController();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    Future.delayed(Duration.zero, () async {
+      for (final wearable in _wearables.getWearables) {
+        if (!mounted) return;
+        final file = File(wearable.imagePath);
+        if (await file.exists()) {
+          await precacheImage(FileImage(file), context);
+        }
+      }
+    });
   }
 
   @override
@@ -250,6 +265,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   Widget _createGrid(WardrobeMode mode) => Padding(
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
         child: GridView.count(
+  
           childAspectRatio:
               _wearableSortType == WearableSortType.none ? 3 / 4 : 9 / 13,
           mainAxisSpacing: 5,
@@ -710,7 +726,8 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         return _sortDown
             ? a.primaryColor.compareTo(b.primaryColor)
             : a.primaryColor.compareTo(b.primaryColor) * -1;
-      case WearableSortType.lastWorn:
+      case WearableSortType
+          .lastWorn: //TODO: LOOP FROM CURRENT DATE TO DATE CREATED TO FIND LAST WORN DATE
         if (a.last == null)
           return _sortDown ? 1 : -1;
         else if (b.last == null)
@@ -756,11 +773,14 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   ) =>
       [
         _createEditButton(
-          () async => slideDownPageTransition(
-            context,
-            EditWearable(w, _wearables),
-            const Duration(milliseconds: 300),
-          ),
+          () async {
+            await slideDownPageTransition(
+              context,
+              EditWearable(w, _wearables),
+              const Duration(milliseconds: 300),
+            );
+            setState(() {});
+          },
         ),
         _createShareButton(
           () => Share.shareXFiles(

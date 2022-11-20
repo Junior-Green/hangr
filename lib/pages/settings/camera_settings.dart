@@ -132,11 +132,11 @@ class _CameraSettingsState extends State<CameraSettings> {
           'ultra',
           null,
           () async {
-            if (prefs.getBool('is_premium_user') ?? false) {
+            if ((prefs.getBool('is_premium_user') ?? false) == false) {
               await showMessageAlert(
                 context,
                 'Warning',
-                'This setting may take up a significant amount of device storage.',
+                'This setting may take up a significant amount of device storage and decrease loading times.',
               );
               prefs.setInt('camera_quality', 100);
               currentIndex = 3;

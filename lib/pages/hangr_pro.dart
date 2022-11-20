@@ -43,71 +43,69 @@ class HangrPro {
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(20)),
               ),
-              child: Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(flex: 2),
-                      const Text(
-                        'You ran into a Hangr Pro exlusive feature!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 20,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        featureDesc,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          height: 1.5,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 40),
-                      TextButton(
-                        onPressed: () => showPremiumBottomSheet(context),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              const MaterialStatePropertyAll(Colors.white),
-                          shape: MaterialStatePropertyAll(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          splashFactory: NoSplash.splashFactory,
-                          overlayColor: const MaterialStatePropertyAll(
-                            Colors.transparent,
-                          ),
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 30,
-                          ),
-                          child: Text(
-                            'LEARN MORE',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const Spacer(flex: 2),
-                      const Icon(
-                        CustomIcons.logo,
-                        size: 40,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Spacer(flex: 2),
+                    const Text(
+                      'You ran into a Hangr Pro exlusive feature!',
+                      style: TextStyle(
                         color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
                       ),
-                    ],
-                  ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      featureDesc,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        height: 1.5,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    TextButton(
+                      onPressed: () => showPremiumBottomSheet(context),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            const MaterialStatePropertyAll(Colors.white),
+                        shape: MaterialStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        splashFactory: NoSplash.splashFactory,
+                        overlayColor: const MaterialStatePropertyAll(
+                          Colors.transparent,
+                        ),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 5,
+                          horizontal: 30,
+                        ),
+                        child: Text(
+                          'LEARN MORE',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Spacer(flex: 2),
+                    const Icon(
+                      CustomIcons.logo,
+                      size: 40,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ),
             )

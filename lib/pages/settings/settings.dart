@@ -48,7 +48,7 @@ class Settings extends StatelessWidget {
     'View and manage your account.',
     'Change how the display of the app looks.',
     'Choose whether to enable reminders and what time you want them delivered.',
-    'Select the resolution of photos taken by the camera when inside the app.',
+    'Select the resolution and quality of the photos taken and stored.',
     'Manage your cloud backup settings.',
     'Leave a review for the app.',
     'Send feedback on the app related to bugs, issues, and features you would like to see.',

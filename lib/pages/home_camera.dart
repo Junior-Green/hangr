@@ -53,9 +53,13 @@ class _HomeCameraState extends State<HomeCamera> {
       return;
     }
 
+    final imageSettings = _getImageSettings(prefs.getInt('camera_quality'));
+
     final XFile? image = await picker.pickImage(
       source: source,
-      imageQuality: prefs.getInt('camera_quality') ?? 50,
+      imageQuality: imageSettings[0].toInt(),
+      maxWidth: imageSettings[1],
+      maxHeight: imageSettings[2],
     );
 
     if (image == null || !mounted) {
@@ -161,5 +165,21 @@ class _HomeCameraState extends State<HomeCamera> {
       return null;
     }
     return croppedFile.readAsBytes();
+  }
+
+//[quality, width, height]
+  List<double> _getImageSettings(int? i) {
+    switch (i) {
+      case 25:
+        return [25, 480, 640]; //480
+      case 50:
+        return [50, 720, 960]; //720
+      case 75:
+        return [75, 1440, 1920]; //1440
+      case 100:
+        return [100, 3072, 4096]; //4k
+      default:
+        return [50, 960, 1280];
+    }
   }
 }
