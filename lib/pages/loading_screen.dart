@@ -1,7 +1,4 @@
 import 'dart:io';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +8,6 @@ import 'package:hangr/pages/home.dart';
 import 'package:hangr/services/alert.dart';
 import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/file_handler.dart';
-import 'package:hangr/services/firebase.dart' as fb;
 import 'package:hangr/services/notifications.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
@@ -29,7 +25,6 @@ class LoadingScreen extends StatefulWidget {
   _LoadingScreenState createState() => _LoadingScreenState();
 }
 
-//TODO: TEST LOGIN ON MULTIPLE DEVICES
 class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
@@ -49,6 +44,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     );
   }
 
+//TODO: IMPLEMENT FIREBASE CLOUD STORAGE
   Future<void> initApp() async {
     try {
       final Directory directory = await getTemporaryDirectory();
@@ -63,17 +59,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
       final Notifications notifications = Notifications()..initialize();
       final String timezone = await FlutterNativeTimezone.getLocalTimezone();
 
-
-      try {
-        await fb.initializeFireBase();
-        await fb.user?.getIdTokenResult(true);
-      } on FirebaseAuthException catch (e) {
-        if (kDebugMode) {
-          print(e);
-          print(e.code);
-        }
-      }
-
       await prefs.setString('time_zone', timezone);
       prefs.setBool(
         'is_premium_user',
@@ -87,14 +72,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
           .setMode(_getThemeMode(prefs.getString('theme') ?? 'system'));
 
       if (kDebugMode) {
-        try {
-          FirebaseDatabase.instance.useDatabaseEmulator('localhost', 9000);
-          await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-        } catch (e) {
-          // ignore: avoid_print
-          print(e);
-        }
-
         await wearables.removeAllWearables();
         await outfits.removeAllOutfits();
         final ByteData byteData =
@@ -105,11 +82,12 @@ class _LoadingScreenState extends State<LoadingScreen> {
           byteData.buffer
               .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
         );
-        // final List<Wearable> wearablesToAdd =
-        //     _getWearables('${directory.path}/shirt.jpg');
-        // for (final w in wearablesToAdd) {
-        //   wearables.addWearable(w);
-        // }
+        final List<Wearable> wearablesToAdd = _getWearables(
+            '${directory.path}/shirt.jpg',
+            DateTime(date.year, date.month, date.day));
+        for (final w in wearablesToAdd) {
+          wearables.addWearable(w);
+        }
       }
 
       if (!mounted) return;
@@ -136,7 +114,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     }
   }
 
-  List<Wearable> _getWearables(String directory) => [
+  List<Wearable> _getWearables(String directory, DateTime date) => [
         Wearable(
           '1',
           WearableType.top,
@@ -145,7 +123,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Shirt1',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 1),
           ),
           1,
@@ -158,7 +136,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Shirt2',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 2),
           ),
           2,
@@ -171,7 +149,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Shirt3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 3),
           ),
           3,
@@ -184,7 +162,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Bottom1',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 4),
           ),
           4,
@@ -197,7 +175,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Bottom2',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 5),
           ),
           5,
@@ -210,7 +188,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Bottom3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 6),
           ),
           6,
@@ -223,7 +201,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Headwear1',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 7),
           ),
           7,
@@ -236,7 +214,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Headwear2',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 8),
           ),
           8,
@@ -249,7 +227,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Headwear3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 9),
           ),
           9,
@@ -262,7 +240,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Footwear1',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 10),
           ),
           10,
@@ -275,7 +253,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Footwear2',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 11),
           ),
           11,
@@ -288,7 +266,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Footwear3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 12),
           ),
           12,
@@ -301,7 +279,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory1',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 3),
           ),
           13,
@@ -314,7 +292,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory2',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 14),
           ),
           14,
@@ -327,7 +305,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           15,
@@ -340,7 +318,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           16,
@@ -353,7 +331,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           17,
@@ -366,7 +344,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           18,
@@ -379,7 +357,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           19,
@@ -392,7 +370,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           20,
@@ -405,7 +383,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           21,
@@ -418,7 +396,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           22,
@@ -431,7 +409,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           23,
@@ -444,7 +422,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           24,
@@ -457,7 +435,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           directory,
           'Accessory3',
           DateTime.now(),
-          DateTime.now().subtract(
+          date.subtract(
             const Duration(days: 15),
           ),
           25,

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hangr/pages/settings/account_settings.dart';
 import 'package:hangr/pages/settings/camera_settings.dart';
 import 'package:hangr/pages/settings/cloud_backup_settings.dart';
@@ -88,6 +89,7 @@ class Settings extends StatelessWidget {
   Widget _generateSetting(int index, BuildContext context) => GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
+          HapticFeedback.lightImpact();
           if (index == 5) {
             _rateApp(context);
             return;

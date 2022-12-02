@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hangr/pages/hangr_pro.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CloudBackup extends StatefulWidget {
@@ -90,7 +92,10 @@ class _CloudBackupState extends State<CloudBackup> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
                           child: GestureDetector(
-                            onTap: () async {},
+                            onTap: () async {
+                              //TODO: SHOW WARNING MESSAGE THAT INFORMS THAT DATA WILL BE OVERWRITTEN ON CLOUD STORAGE
+                              await HapticFeedback.lightImpact();
+                            },
                             child: Visibility(
                               visible: _isToggled,
                               child: Row(
@@ -98,7 +103,7 @@ class _CloudBackupState extends State<CloudBackup> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Backup',
+                                    'Upload Wardrobe',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       color: Theme.of(context)
@@ -120,7 +125,13 @@ class _CloudBackupState extends State<CloudBackup> {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 5, 5, 5),
                           child: GestureDetector(
-                            onTap: () async {},
+                            onTap: () async {
+                              _showWarningMessage(
+                                context,
+                                'message',
+                              ); //TODO: SHOW WARNING MESSAGE THAT INFORMS THAT DATA WILL BE OVERWRITTEN ON DEVICE STORAGE
+                              await HapticFeedback.lightImpact();
+                            },
                             child: Visibility(
                               visible: _isToggled,
                               child: Row(
@@ -128,7 +139,7 @@ class _CloudBackupState extends State<CloudBackup> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Sync',
+                                    'Sync Wardrobe',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       color: Theme.of(context)
@@ -156,4 +167,55 @@ class _CloudBackupState extends State<CloudBackup> {
               : const SizedBox.shrink(),
         ),
       );
+
+  Future<bool> _showWarningMessage(BuildContext context, String message) async {
+    bool res = false;
+
+    await Alert(
+      context: context,
+      type: AlertType.none,
+      title: 'Warning',
+      desc: message,
+      style: AlertStyle(
+        animationType: AnimationType.grow,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        alertBorder: RoundedRectangleBorder(
+          side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
+          borderRadius: const BorderRadius.all(Radius.circular(15)),
+        ),
+        isCloseButton: false,
+        titleStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+        descStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontSize: 15,
+        ),
+      ),
+      buttons: [
+        DialogButton(
+          height: 35,
+          radius: const BorderRadius.all(Radius.circular(8)),
+          color: Theme.of(context).colorScheme.tertiary,
+          onPressed: () {
+            res = true;
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Yes'),
+        ),
+        DialogButton(
+          height: 35,
+          color: Theme.of(context).colorScheme.tertiary,
+          radius: const BorderRadius.all(Radius.circular(8)),
+          onPressed: () {
+            res = false;
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Cancel'),
+        )
+      ],
+    ).show();
+    return res;
+  }
 }

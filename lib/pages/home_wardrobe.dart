@@ -11,6 +11,7 @@ import 'package:hangr/pages/add_outfit.dart';
 import 'package:hangr/pages/edit_outfit.dart';
 import 'package:hangr/pages/edit_wearable.dart';
 import 'package:hangr/pages/hangr_pro.dart';
+import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/custom_icons.dart';
 import 'package:hangr/services/outfit.dart';
 import 'package:hangr/services/page_transition.dart';
@@ -265,7 +266,6 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
   Widget _createGrid(WardrobeMode mode) => Padding(
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
         child: GridView.count(
-  
           childAspectRatio:
               _wearableSortType == WearableSortType.none ? 3 / 4 : 9 / 13,
           mainAxisSpacing: 5,
@@ -394,11 +394,12 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
 
   Widget _wardrobeAddHint() => GestureDetector(
         onTap: () async {
+          await HapticFeedback.lightImpact();
           if (_mode.value == WardrobeMode.clothes) {
             widget.homeTabController.animateTo(0);
           } else {
             final prefs = await SharedPreferences.getInstance();
-            final isPremiumMember = prefs.getBool('is_premium_member') ?? false;
+            final isPremiumMember = prefs.getBool('is_premium_user') ?? false;
             final outfitCount = _outfits.getOutfits.length;
 
             if (!mounted) return;
@@ -720,14 +721,16 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
             : a.name.compareTo(b.name) * -1;
       case WearableSortType.brand:
         return _sortDown
-            ? a.brand.compareTo(b.name)
-            : a.brand.compareTo(b.name) * -1;
+            ? a.brand.compareTo(b.brand)
+            : a.brand.compareTo(b.brand) * -1;
       case WearableSortType.color:
         return _sortDown
             ? a.primaryColor.compareTo(b.primaryColor)
             : a.primaryColor.compareTo(b.primaryColor) * -1;
-      case WearableSortType
-          .lastWorn: //TODO: LOOP FROM CURRENT DATE TO DATE CREATED TO FIND LAST WORN DATE
+      //TODO: LOOP FROM CURRENT DATE TO DATE CREATED TO FIND LAST WORN DATE
+      case WearableSortType.lastWorn:
+        _refreshLastWorn(a);
+        _refreshLastWorn(b);
         if (a.last == null)
           return _sortDown ? 1 : -1;
         else if (b.last == null)
@@ -1016,9 +1019,42 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
       case WearableSortType.timesWorn:
         return w.timesWorn.toString();
       case WearableSortType.lastWorn:
-        return w.last == null
-            ? 'Not worn'
-            : DateFormat().add_yMd().format(w.last!);
+        return _formatLastWornLabel(w.last);
+    }
+  }
+
+  void _refreshLastWorn(Wearable w) {
+    final map = context.read<CalendarMap>();
+    DateTime startDate = context.read<DateTime>();
+    final DateTime endDate = w.last ??
+        DateTime(w.timeTaken.year, w.timeTaken.month, w.timeTaken.day);
+    while (!startDate.isBefore(endDate)) {
+      if (map.getOutfitFromDate(startDate).contains(w.id)) {
+        _wearables.updateLastWorn(w, startDate);
+        return;
+      }
+      startDate = startDate.subtract(const Duration(days: 1));
+    }
+  }
+
+  String _formatLastWornLabel(DateTime? last) {
+    if (last == null) return 'Not worn';
+    final DateTime today = context.read<DateTime>();
+    final int diff = today.difference(last).inDays;
+    if (diff >= 365) {
+      return '>1 year';
+    } else if (diff >= 182) {
+      return '>6 months';
+    } else if (diff >= 91) {
+      return '>3 months';
+    } else if (diff >= 30) {
+      return '1 month';
+    } else if (diff == 1) {
+      return 'yesterday';
+    } else if (diff == 0) {
+      return 'today';
+    } else {
+      return '$diff days';
     }
   }
 }

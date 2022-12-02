@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // ignore: must_be_immutable
 class ToggableImage<T> extends StatefulWidget {
@@ -55,6 +56,7 @@ class _ToggableImageState extends State<ToggableImage> {
       );
 
   void _toggle() {
+    HapticFeedback.selectionClick();
     widget.onTap();
     widget.toggle();
   }

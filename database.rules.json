@@ -4,7 +4,7 @@
       "$uid": {
         ".read": "$uid === auth.uid",
         ".write": "$uid === auth.uid",
-        "is_premium_member": {
+        "is_premium_user": {
           ".validate": "newData.isBoolean()"
         }
       }

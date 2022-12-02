@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -13,66 +14,74 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 Future<void> initializeFireBase() async {
   await Firebase.initializeApp(
-    name: 'hangr-fc824',
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FirebaseAppCheck.instance.activate();
+
+  // if (kDebugMode) {
+  //   FirebaseDatabase.instance.useDatabaseEmulator('localhost', 9000);
+  //   await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  // }
+
   FirebaseDatabase.instance.setPersistenceEnabled(true);
 
-  FirebaseAuth.instance
-      .authStateChanges()
-      .listen((User? user) async => _userHandler(user));
+  FirebaseAuth.instance.authStateChanges().listen(_userHandler);
 
-  FirebaseAuth.instance
-      .idTokenChanges()
-      .listen((User? user) async => _userHandler(user));
+  FirebaseAuth.instance.idTokenChanges().listen(_userHandler);
 
-  FirebaseAuth.instance
-      .userChanges()
-      .listen((User? user) async => _userHandler(user));
-
-  if (FirebaseAuth.instance.currentUser != null) {
-    final prefs = await SharedPreferences.getInstance();
-    final ref = FirebaseDatabase.instance
-        .ref('users/${FirebaseAuth.instance.currentUser!.uid}');
-    final snap = await ref.get();
-    print(snap.children.toString());
-    if (kDebugMode) {
-      print('User is signed in!');
-    }
-    await ref.keepSynced(true);
-    ref.onValue.listen((DatabaseEvent event) async {
-      final isMemberSnapshot = event.snapshot.child('is_premium_member');
-      print(event.snapshot.toString());
-
-      if (!isMemberSnapshot.exists) {
-        await ref.update(
-          {"is_premium_memeber": false},
-        );
-        await _handleUserSignOut();
-      } else if (isMemberSnapshot.value as bool? ?? false) {
-        await prefs.setBool('is_premium_member', true);
-      } else {
-        await prefs.setBool('is_premium_member', false);
-      }
-    });
-  }
+  FirebaseAuth.instance.userChanges().listen(_userHandler);
 }
 
 Future<void> _userHandler(User? user) async {
   if (user == null) {
     await _handleUserSignOut();
-  } else {}
+  } else {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ref = FirebaseDatabase.instance
+          .ref('users/${FirebaseAuth.instance.currentUser!.uid}');
+
+      await ref.keepSynced(true);
+      ref.onValue.listen(
+        (DatabaseEvent event) async {
+          final isMemberSnapshot = event.snapshot.child('is_premium_user');
+          if (!isMemberSnapshot.exists) {
+            await ref.update(
+              {"is_premium_user": false},
+            );
+            await _handleUserSignOut();
+          } else if (isMemberSnapshot.value as bool? ?? false) {
+            await prefs.setBool('is_premium_user', true);
+            if (kDebugMode) {
+              print(prefs.getBool('is_premium_user'));
+            }
+          } else {
+            await _handleUserSignOut();
+            if (kDebugMode) {
+              print(prefs.getBool('is_premium_user'));
+            }
+          }
+        },
+        onError: (Object error) => {},
+        cancelOnError: true,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        print(e.message);
+      }
+    }
+  }
 }
 
 Future<void> _handleUserSignOut() async {
   final prefs = await SharedPreferences.getInstance();
-  prefs.setBool('is_premium_member', false);
+  prefs.setBool('is_premium_user', false);
   if ((prefs.getInt('camera_quality') ?? 0) == 100) {
     await prefs.setInt('camera_quality', 75);
   }
   prefs.setBool('backup', false);
   if (kDebugMode) {
-    print('User is currently signed out!');
+    print('user signed out!');
   }
 }
 
@@ -86,17 +95,8 @@ Future<User?> unlinkWithApple() async =>
 Future<User?> unlinkWithGoogle() async =>
     FirebaseAuth.instance.currentUser?.unlink('google.com');
 
-Future<UserCredential?> logInWithGoogle() async {
-  try {
-    return FirebaseAuth.instance
-        .signInWithCredential(await _getGoogleCredential());
-  } on Exception catch (e) {
-    if (kDebugMode) {
-      print(e);
-    }
-  }
-  return null;
-}
+Future<UserCredential?> logInWithGoogle() async =>
+    FirebaseAuth.instance.signInWithCredential(await _getGoogleCredential());
 
 Future<UserCredential?> logInWithApple() async =>
     FirebaseAuth.instance.signInWithCredential(await _getAppleCredential());
@@ -110,13 +110,17 @@ Future<void> linkAccountWithGoogle() async => FirebaseAuth.instance.currentUser!
 Future<AuthCredential> _getGoogleCredential() async {
   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
+  if (googleUser == null) throw Exception;
   // Obtain the auth details from the request
-  final GoogleSignInAuthentication? googleAuth =
-      await googleUser?.authentication;
+  final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+  if (googleAuth.accessToken == null || googleAuth.idToken == null)
+    throw Exception;
+
   // Create a new credential
   return GoogleAuthProvider.credential(
-    accessToken: googleAuth?.accessToken,
-    idToken: googleAuth?.idToken,
+    accessToken: googleAuth.accessToken,
+    idToken: googleAuth.idToken,
   );
 }
 

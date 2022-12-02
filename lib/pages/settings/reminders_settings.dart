@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hangr/services/notifications.dart';
 import 'package:intl/intl.dart';
@@ -107,6 +108,7 @@ class _RemindersState extends State<Reminders> {
                           padding: const EdgeInsets.fromLTRB(0, 5, 5, 0),
                           child: GestureDetector(
                             onTap: () async {
+                              await HapticFeedback.lightImpact();
                               _reminderTime = await _getTime(_reminderTime);
                               await prefs.setString(
                                 'notifications_time',

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hangr/pages/settings/settings.dart';
@@ -42,6 +43,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
   @override
   void initState() {
     _controller = IndexedScrollController(initialScrollOffset: -200);
+
     super.initState();
   }
 
@@ -84,9 +86,10 @@ class _HomeCalendarState extends State<HomeCalendar> {
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Spacer(
-                        flex: 2,
-                      ),
+                      IconButton(
+                          onPressed: goToDate,
+                          icon: const Icon(CupertinoIcons.search)),
+                      const Spacer(),
                       Expanded(
                         flex: 4,
                         child: Text(
@@ -139,9 +142,12 @@ class _HomeCalendarState extends State<HomeCalendar> {
               );
             }
           },
-          child: CalendarDate(
-            DateTime(_today.year, _today.month, _today.day + index),
-            _today,
+          child: Provider<DateTime>.value(
+            value: _today,
+            builder: (_, __) => CalendarDate(
+              DateTime(_today.year, _today.month, _today.day + index),
+              _today,
+            ),
           ),
         ),
         separatorBuilder: (BuildContext context, int index) => const SizedBox(
@@ -158,5 +164,28 @@ class _HomeCalendarState extends State<HomeCalendar> {
       }
     });
     return true;
+  }
+
+  Future<void> goToDate() async {
+    DateTime date = context.read<DateTime>();
+
+    await showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        color: Theme.of(context).colorScheme.secondary,
+        height: 300,
+        child: CupertinoDatePicker(
+          initialDateTime: date,
+          mode: CupertinoDatePickerMode.date,
+          onDateTimeChanged: (time) => date = time,
+        ),
+      ),
+    );
+    if (!mounted) return;
+
+    await _controller.animateToIndexAndOffset(
+      index: date.difference(context.read<DateTime>()).inDays,
+      offset: -200,
+    );
   }
 }

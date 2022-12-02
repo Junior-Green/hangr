@@ -10,7 +10,7 @@ class HangrPro {
     final screenHeight = MediaQuery.of(context).size.height;
 
     final dialog = Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 80),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 79),
       backgroundColor: Colors.transparent,
       alignment: Alignment.center,
       shape: const RoundedRectangleBorder(), //this right here

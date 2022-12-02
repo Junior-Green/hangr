@@ -9,11 +9,15 @@ import Firebase
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    
-     FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
-        FirebaseApp.configure()
-        GeneratedPluginRegistrant.register(with: registry)
+
+    FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
+    GeneratedPluginRegistrant.register(with: registry)
     }
+    
+#if DEBUG
+    let providerFactory = AppCheckDebugProviderFactory()
+    AppCheck.setAppCheckProviderFactory(providerFactory)
+#endif
 
     if #available(iOS 10.0, *) {
       application.applicationIconBadgeNumber = 0
@@ -21,15 +25,11 @@ import Firebase
       UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
 
-    if(!UserDefaults.standard.bool(forKey: "Notification")) {
-    UIApplication.shared.cancelAllLocalNotifications()
-    UserDefaults.standard.set(true, forKey: "Notification")
-}
-
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+
   override func applicationDidEnterBackground(_ application: UIApplication){
    application.applicationIconBadgeNumber = 0
-}
+  }
 }

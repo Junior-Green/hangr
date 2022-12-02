@@ -78,6 +78,12 @@ class MyWearables extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateLastWorn(Wearable w, DateTime date) {
+    w.last = date;
+    _handler.writeWearables(_wearables);
+    notifyListeners();
+  }
+
   Future<void> removeAllWearables() async {
     for (final w in _wearables) {
       if (await File(w.imagePath).exists()) {

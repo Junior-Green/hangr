@@ -359,6 +359,7 @@ class _AddOutfitState extends State<AddOutfit> {
   Widget _addPrompt(WearableType type, List<Wearable> wearables) =>
       GestureDetector(
         onTap: () async {
+          await HapticFeedback.lightImpact();
           await _getWearableSelection(type, wearables);
         },
         child: AspectRatio(
@@ -397,6 +398,7 @@ class _AddOutfitState extends State<AddOutfit> {
             aspectRatio: 3 / 4,
             child: GestureDetector(
               onTap: () async {
+                await HapticFeedback.lightImpact();
                 await _getImage();
                 _enableButton();
               },
@@ -541,6 +543,7 @@ class _AddOutfitState extends State<AddOutfit> {
             padding: const EdgeInsets.only(right: 10),
             child: GestureDetector(
               onTap: () => setState(() {
+                HapticFeedback.lightImpact();
                 wearables.add(e);
                 _isPiecesValid.value = _tops.isNotEmpty ||
                     _bottoms.isNotEmpty ||

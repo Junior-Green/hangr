@@ -69,7 +69,10 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
         body: _body,
         floatingActionButton: widget.isEditable
             ? FloatingActionButton(
-                onPressed: _getOutfitSelection,
+                onPressed: () async {
+                  await HapticFeedback.mediumImpact();
+                  _getOutfitSelection();
+                },
                 foregroundColor: Colors.white,
                 backgroundColor: Theme.of(context).colorScheme.tertiary,
                 child: const Icon(CustomIcons.hanger, size: 25),
@@ -229,6 +232,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
   Widget _addPrompt(WearableType type, List<Wearable> wearables) =>
       GestureDetector(
         onTap: () async {
+          await HapticFeedback.lightImpact();
           await _getWearableSelection(type, wearables);
         },
         child: AspectRatio(
@@ -266,6 +270,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
             padding: const EdgeInsets.only(right: 10),
             child: GestureDetector(
               onTap: () => setState(() {
+                HapticFeedback.lightImpact();
                 wearables.add(e);
                 e.incrementTimeWorn();
                 Navigator.pop(context);
@@ -356,6 +361,7 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                                   padding: const EdgeInsets.only(right: 10),
                                   child: GestureDetector(
                                     onTap: () => setState(() {
+                                      HapticFeedback.lightImpact();
                                       _buildOuftit(e);
                                       Navigator.pop(context);
                                     }),

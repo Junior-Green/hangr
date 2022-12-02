@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hangr/pages/calendar_outfit.dart';
 import 'package:hangr/services/calendar_map.dart';
 import 'package:hangr/services/outfit.dart';
+import 'package:hangr/services/page_transition.dart';
 import 'package:hangr/services/wearable.dart';
 import 'package:provider/provider.dart';
 
@@ -114,17 +115,16 @@ class _CalendarDateState extends State<CalendarDate> {
           ),
           child: IconButton(
             padding: const EdgeInsets.fromLTRB(2, 0, 0, 0),
-            onPressed: () => Navigator.push(
+            onPressed: () => fadeInPageTransition(
               context,
-              _createRoute(
-                CalendarOutfit(
-                  map: map,
-                  outfits: outfits,
-                  wearables: wearables,
-                  date: widget._date,
-                  isEditable: true,
-                ),
+              CalendarOutfit(
+                map: map,
+                outfits: outfits,
+                wearables: wearables,
+                date: widget._date,
+                isEditable: true,
               ),
+              const Duration(milliseconds: 250),
             ),
             icon: const Icon(
               CupertinoIcons.forward,
