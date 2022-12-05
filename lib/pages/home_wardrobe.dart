@@ -20,7 +20,6 @@ import 'package:hangr/widgets/no_opacity_flexible_space_bar.dart';
 import 'package:hangr/widgets/zoomable_outfit.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';

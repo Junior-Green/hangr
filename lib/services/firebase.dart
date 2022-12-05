@@ -114,8 +114,9 @@ Future<AuthCredential> _getGoogleCredential() async {
   // Obtain the auth details from the request
   final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-  if (googleAuth.accessToken == null || googleAuth.idToken == null)
+  if (googleAuth.accessToken == null || googleAuth.idToken == null) {
     throw Exception;
+  }
 
   // Create a new credential
   return GoogleAuthProvider.credential(

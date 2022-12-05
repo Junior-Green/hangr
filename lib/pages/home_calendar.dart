@@ -88,7 +88,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
                     children: [
                       IconButton(
                           onPressed: goToDate,
-                          icon: const Icon(CupertinoIcons.search)),
+                          icon: const Icon(CupertinoIcons.search),),
                       const Spacer(),
                       Expanded(
                         flex: 4,

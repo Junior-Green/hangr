@@ -83,8 +83,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
               .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
         );
         final List<Wearable> wearablesToAdd = _getWearables(
-            '${directory.path}/shirt.jpg',
-            DateTime(date.year, date.month, date.day));
+          '${directory.path}/shirt.jpg',
+          DateTime(date.year, date.month, date.day),
+        );
         for (final w in wearablesToAdd) {
           wearables.addWearable(w);
         }

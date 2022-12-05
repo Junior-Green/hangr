@@ -311,7 +311,16 @@ class _AccountState extends State<Account> {
                   }
                 }
               },
-              child: SizedBox(
+              child: Container(
+                decoration: const BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      spreadRadius: -2,
+                      blurRadius: 3,
+                      offset: Offset(0, 3), // changes position of shadow
+                    ),
+                  ],
+                ),
                 height: 58,
                 child: Image(
                   image: AssetImage(appleButtonPath),

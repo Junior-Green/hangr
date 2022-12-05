@@ -61,6 +61,7 @@ final lightTheme = ThemeData(
     onSecondary: const Color.fromARGB(255, 180, 180, 180),
     tertiary: const Color.fromARGB(255, 210, 3, 79),
   ),
+
   textTheme: Typography.blackCupertino,
   scaffoldBackgroundColor: Colors.white,
   textSelectionTheme: const TextSelectionThemeData(
