@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/logic/togglable_image_group.dart';
 import 'package:hangr/model/custom_icons.dart';
 import 'package:hangr/model/outfit.dart';
@@ -430,20 +431,25 @@ class _AddOutfitState extends State<AddOutfit> {
       );
 
   Future<void> _getImage() async {
-    final ImagePicker picker = ImagePicker();
-    final ImageSource? source = await _getImageSource(context);
+    try {
+      final ImagePicker picker = ImagePicker();
+      final ImageSource? source = await _getImageSource(context);
 
-    if (source == null) {
-      return;
-    }
+      if (source == null) {
+        return;
+      }
 
-    final XFile? image = await picker.pickImage(source: source);
-    if (image == null) {
-      return;
+      final XFile? image = await picker.pickImage(source: source);
+      if (image == null) {
+        return;
+      }
+      // ignore: use_build_context_synchronously
+      _outfitImage = await _cropImage(image.path, context);
+      _isOutfitImageValid.value = _outfitImage != null;
+    } on Exception catch (e, trace) {
+      Logger.log('Error retrieving image from ');
+      Logger.reportError(trace, e);
     }
-    // ignore: use_build_context_synchronously
-    _outfitImage = await _cropImage(image.path, context);
-    _isOutfitImageValid.value = _outfitImage != null;
   }
 
   Future<ImageSource?> _getImageSource(BuildContext context) async {
@@ -557,10 +563,27 @@ class _AddOutfitState extends State<AddOutfit> {
                 aspectRatio: 3 / 4,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.all(Radius.circular(15)),
-                  child: Image.file(
-                    File(e.imagePath),
-                    fit: BoxFit.fill,
-                  ),
+                  child: File(e.imagePath).existsSync()
+                      ? Image.file(
+                          File(e.imagePath),
+                          fit: BoxFit.fill,
+                        )
+                      : const ColoredBox(
+                          color: Colors.grey,
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.fill,
+                              child: Text(
+                                'No Image',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 50,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -887,11 +910,11 @@ class _AddOutfitState extends State<AddOutfit> {
   }
 
   Future<void> _finalize() async {
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = await getTemporaryDirectory();
     final dirPath = dir.path;
     const generator = Uuid();
     final generatedId = generator.v1();
-    final imagePath = '$dirPath/$generatedId.jpg';
+    final imagePath = '$dirPath/photos/$generatedId.jpg';
     final outfitType = _getOutfitType();
     final ids = _tops
         .followedBy(_bottoms)

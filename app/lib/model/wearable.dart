@@ -27,9 +27,10 @@ class Wearable {
   final String brand;
   final String primaryColor;
   final String imagePath;
-  final DateTime timeTaken;
+  final DateTime timeCreated;
   DateTime? last;
   int times = 0;
+  bool uploaded = false;
 
   Wearable(
     this.id,
@@ -38,7 +39,7 @@ class Wearable {
     this.primaryColor,
     this.imagePath,
     this.name,
-    this.timeTaken, [
+    this.timeCreated, [
     this.last,
     this.times = 0,
   ]);
@@ -46,10 +47,12 @@ class Wearable {
   void incrementTimeWorn() => times++;
   void decrementTimeWorn() => times--;
 
-  set lastWorn(DateTime? time) => last;
+  set lastWorn(DateTime? time) => last = time;
+  set isUploaded(bool isUploaded) => uploaded = isUploaded;
 
   DateTime? get lastWorn => last;
   int get timesWorn => times;
+  bool get isUploaded => uploaded;
 
   factory Wearable.fromJson(Map<String, dynamic> json) =>
       _$WearableFromJson(json);
@@ -64,6 +67,10 @@ class MyWearables extends ChangeNotifier {
   MyWearables(this._wearables, this._handler);
 
   Future<void> addWearable(Wearable w) async {
+    final index = _wearables.indexWhere((element) => element.id == w.id);
+    if (index != -1) {
+      await removeWearable(_wearables[index]);
+    }
     _wearables.add(w);
     await _handler.writeWearables(_wearables);
     notifyListeners();

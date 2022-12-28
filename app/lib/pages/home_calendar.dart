@@ -110,16 +110,23 @@ class _HomeCalendarState extends State<HomeCalendar> {
                       ),
                       const Spacer(),
                       IconButton(
-                        onPressed: () => slideRightPageTransition(
-                          context,
-                          Settings(
-                            context.read<ThemeHandler>(),
-                            context.read<Notifications>(),
-                            context.read<IAP>(),
-                            context.read<CloudStorage>(),
-                          ),
-                          const Duration(milliseconds: 100),
-                        ),
+                        onPressed: () {
+                          if (!context.read<ValueNotifier<bool>>().value) {
+                            return;
+                          }
+                          slideRightPageTransition(
+                            context,
+                            Settings(
+                              context.read<ThemeHandler>(),
+                              context.read<Notifications>(),
+                              context.read<IAP>(),
+                              context.read<CloudStorage>(),
+                              context.read<MyWearables>(),
+                              context.read<MyOutfits>(),
+                            ),
+                            const Duration(milliseconds: 100),
+                          );
+                        },
                         icon: Icon(
                           Icons.more_vert_rounded,
                           size: 30,
@@ -174,6 +181,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
   }
 
   Future<void> goToDate() async {
+    if (!context.read<ValueNotifier<bool>>().value) return;
     DateTime date = context.read<DateTime>();
 
     await showCupertinoModalPopup(

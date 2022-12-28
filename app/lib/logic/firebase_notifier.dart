@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,11 +9,13 @@ import 'package:crypto/crypto.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hangr/constants.dart';
 import 'package:hangr/firebase_options.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/model/firebase_state.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -20,7 +23,7 @@ class FirebaseNotifier extends ChangeNotifier {
   bool get loggedIn => FirebaseAuth.instance.currentUser != null;
   FirebaseState state = FirebaseState.loading;
 
-  late final Completer<bool> _isInitialized = Completer();
+  final Completer<bool> _isInitialized = Completer();
   late FirebaseFunctions? _functions;
 
   FirebaseNotifier() {
@@ -43,6 +46,14 @@ class FirebaseNotifier extends ChangeNotifier {
     return FirebaseFirestore.instance;
   }
 
+  Future<FirebaseCrashlytics> get crashlytics async {
+    final isInitialized = await _isInitialized.future;
+    if (!isInitialized) {
+      throw Exception('Firebase is not initialized');
+    }
+    return FirebaseCrashlytics.instance;
+  }
+
   Future<FirebaseStorage> get storage async {
     final isInitialized = await _isInitialized.future;
     if (!isInitialized) {
@@ -57,6 +68,24 @@ class FirebaseNotifier extends ChangeNotifier {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       await FirebaseAppCheck.instance.activate();
+      FlutterError.onError = (errorDetails) {
+        FirebaseCrashlytics.instance.recordFlutterError(errorDetails);
+      };
+      // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack);
+        return true;
+      };
+
+      Isolate.current.addErrorListener(
+        RawReceivePort((err) async {
+          await FirebaseCrashlytics.instance.recordError(
+            err,
+            null,
+            fatal: true,
+          );
+        }).sendPort,
+      );
 
       // if (kDebugMode) {
       //   FirebaseDatabase.instance.useDatabaseEmulator('localhost', 9000);
@@ -67,7 +96,9 @@ class FirebaseNotifier extends ChangeNotifier {
       state = FirebaseState.available;
       _isInitialized.complete(true);
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e, trace) {
+      Logger.log('Firebase initialization error');
+      Logger.reportError(trace, e);
       state = FirebaseState.notAvailable;
       _isInitialized.complete(false);
       notifyListeners();
@@ -84,8 +115,9 @@ class FirebaseNotifier extends ChangeNotifier {
 
   Future<void> logOut() => FirebaseAuth.instance.signOut();
 
-  Future<User?> unlinkWithApple() async =>
-      FirebaseAuth.instance.currentUser?.unlink('apple.com');
+  Future<User?> unlinkWithApple() async {
+    return FirebaseAuth.instance.currentUser?.unlink('apple.com');
+  }
 
   Future<User?> unlinkWithGoogle() async =>
       FirebaseAuth.instance.currentUser?.unlink('google.com');
@@ -113,7 +145,7 @@ class FirebaseNotifier extends ChangeNotifier {
         await googleUser.authentication;
 
     if (googleAuth.accessToken == null || googleAuth.idToken == null) {
-      throw Exception;
+      throw Exception('Invalid google authentication token');
     }
 
     // Create a new credential

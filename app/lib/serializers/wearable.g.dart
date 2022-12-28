@@ -13,7 +13,7 @@ Wearable _$WearableFromJson(Map<String, dynamic> json) => Wearable(
       json['primaryColor'] as String,
       json['imagePath'] as String,
       json['name'] as String,
-      DateTime.parse(json['timeTaken'] as String),
+      DateTime.parse(json['timeCreated'] as String),
       json['last'] as String == ''
           ? null
           : DateTime.parse(json['last'] as String),
@@ -27,7 +27,7 @@ Map<String, dynamic> _$WearableToJson(Wearable instance) => <String, dynamic>{
       'brand': instance.brand,
       'primaryColor': instance.primaryColor,
       'imagePath': instance.imagePath,
-      'timeTaken': instance.timeTaken.toIso8601String(),
+      'timeCreated': instance.timeCreated.toIso8601String(),
       'last': instance.last?.toIso8601String() ?? '',
       'times': instance.times
     };

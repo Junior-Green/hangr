@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hangr/model/theme_handler.dart';
-import 'package:hangr/pages/loading_screen.dart';
+import 'package:hangr/pages/splash_screen.dart';
 import 'package:hangr/themes.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +16,7 @@ void main() async {
           themeMode: handler.mode,
           initialRoute: '/',
           routes: {
-            '/': (_) => const LoadingScreen(),
+            '/': (_) => const SplashScreen(),
           },
         ),
       ),

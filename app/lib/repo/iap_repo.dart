@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
-
 import 'package:hangr/constants.dart';
 import 'package:hangr/logic/firebase_notifier.dart';
 import 'package:hangr/model/past_purchase.dart';
@@ -11,11 +9,13 @@ import 'package:hangr/model/past_purchase.dart';
 class IAPRepo extends ChangeNotifier {
   late FirebaseFirestore _firestore;
   late FirebaseAuth _auth;
+  late final Stream<User?> userStream;
 
+  bool hasActiveSubscription = false;
   bool get isLoggedIn => _user != null;
+
   User? get user => _user;
   User? _user;
-  bool hasActiveSubscription = false;
 
   List<PastPurchase> purchases = [];
 
@@ -33,7 +33,8 @@ class IAPRepo extends ChangeNotifier {
 
   void listenToLogin() {
     _user = _auth.currentUser;
-    _userSubscription = FirebaseAuth.instance.userChanges().listen((user) {
+    userStream = FirebaseAuth.instance.userChanges();
+    _userSubscription = userStream.listen((user) async {
       _user = user;
       updatePurchases();
       notifyListeners();
@@ -49,6 +50,7 @@ class IAPRepo extends ChangeNotifier {
       notifyListeners();
       return;
     }
+
     final purchaseStream = _firestore
         .collection('purchases')
         .where('userId', isEqualTo: user.uid)

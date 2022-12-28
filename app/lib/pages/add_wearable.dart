@@ -34,7 +34,7 @@ class _AddWearableState extends State<AddWearable>
   List<String> brands = [];
   List<String> colors = [];
   bool _canScroll = false;
-  double _opacity = 1.0;
+  double _opacity = 0.0;
 
   @override
   void initState() {
@@ -288,11 +288,11 @@ class _AddWearableState extends State<AddWearable>
       ];
 
   Future<void> _finalize() async {
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = await getTemporaryDirectory();
     final dirPath = dir.path;
     const generator = Uuid();
     final generatedId = generator.v1();
-    final imagePath = '$dirPath/$generatedId.jpg';
+    final imagePath = '$dirPath/photos/$generatedId.jpg';
     final wearableType = _getWearableType();
 
     if (wearableType == null) {
@@ -484,7 +484,8 @@ class _AddWearableState extends State<AddWearable>
       ? null
       : _group.getSelectedImage()!.value;
 
-  void _changeOpacity() => setState(() => _opacity = _opacity == 0.0 ? 1.0 : 0.0);
+  void _changeOpacity() =>
+      setState(() => _opacity = _opacity == 0.0 ? 1.0 : 0.0);
 
   Future<void> _dialog() async {
     await Alert(

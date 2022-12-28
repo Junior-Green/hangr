@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:hangr/constants.dart';
 import 'package:hangr/logic/iap.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/wearable.dart';
@@ -44,7 +45,7 @@ class _HomeCameraState extends State<HomeCamera> {
 
     final wearableCount = context.read<MyWearables>().getWearables.length;
 
-    if (!isPremiumMember && wearableCount >= 25) {
+    if (!isPremiumMember && wearableCount >= wearableLimit) {
       await HangrPro.showProDialog(
         context,
         'Create and store an unlimited amount of clothing with Hangr Pro.',

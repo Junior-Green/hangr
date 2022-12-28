@@ -86,10 +86,27 @@ class _EditWearableState extends State<EditWearable>
                     borderRadius: const BorderRadius.all(Radius.circular(20)),
                     child: AspectRatio(
                       aspectRatio: _aspectRatio,
-                      child: Image.file(
-                        File(widget._wearable.imagePath),
-                        fit: BoxFit.fill,
-                      ),
+                      child: File(widget._wearable.imagePath).existsSync()
+                          ? Image.file(
+                              File(widget._wearable.imagePath),
+                              fit: BoxFit.fill,
+                            )
+                          : const ColoredBox(
+                              color: Colors.grey,
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.fill,
+                                  child: Text(
+                                    'No Image',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 50,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -311,14 +328,11 @@ class _EditWearableState extends State<EditWearable>
         newColor,
         widget._wearable.imagePath,
         newName,
-        widget._wearable.timeTaken,
+        widget._wearable.timeCreated,
       );
       if (!mounted) return;
 
       final image = await File(newWearable.imagePath).readAsBytes();
-
-      if (!mounted) return;
-      await widget._wearables.removeWearable(widget._wearable);
 
       if (!mounted) return;
       await widget._wearables.addWearable(newWearable);

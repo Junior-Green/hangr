@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:hangr/constants.dart';
 import 'package:hangr/logic/iap.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/calendar_map.dart';
@@ -27,7 +28,6 @@ import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum WearableSortType { none, name, color, brand, timesWorn, lastWorn }
 
@@ -407,7 +407,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
 
             if (!mounted) return;
 
-            if (!isPremiumMember && outfitCount >= 7) {
+            if (!isPremiumMember && outfitCount >= outfitLimit) {
               await HangrPro.showProDialog(
                 context,
                 'Create and store an unlimited amount of outfits with Hangr Pro',
@@ -1031,7 +1031,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
     final map = context.read<CalendarMap>();
     DateTime startDate = context.read<DateTime>();
     final DateTime endDate = w.last ??
-        DateTime(w.timeTaken.year, w.timeTaken.month, w.timeTaken.day);
+        DateTime(w.timeCreated.year, w.timeCreated.month, w.timeCreated.day);
     while (!startDate.isBefore(endDate)) {
       if (map.getOutfitFromDate(startDate).contains(w.id)) {
         _wearables.updateLastWorn(w, startDate);

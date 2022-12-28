@@ -279,10 +279,27 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                 aspectRatio: 3 / 4,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.all(Radius.circular(15)),
-                  child: Image.file(
-                    File(e.imagePath),
-                    fit: BoxFit.fill,
-                  ),
+                  child: File(e.imagePath).existsSync()
+                      ? Image.file(
+                          File(e.imagePath),
+                          fit: BoxFit.fill,
+                        )
+                      : const ColoredBox(
+                          color: Colors.grey,
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.fill,
+                              child: Text(
+                                'No Image',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -371,10 +388,28 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
                                         borderRadius: const BorderRadius.all(
                                           Radius.circular(15),
                                         ),
-                                        child: Image.file(
-                                          File(e.imagePath),
-                                          fit: BoxFit.fill,
-                                        ),
+                                        child: File(e.imagePath).existsSync()
+                                            ? Image.file(
+                                                File(e.imagePath),
+                                                fit: BoxFit.fill,
+                                              )
+                                            : const ColoredBox(
+                                                color: Colors.grey,
+                                                child: Center(
+                                                  child: FittedBox(
+                                                    fit: BoxFit.fill,
+                                                    child: Text(
+                                                      'No Image',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 20,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                       ),
                                     ),
                                   ),

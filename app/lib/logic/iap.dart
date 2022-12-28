@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hangr/constants.dart';
 import 'package:hangr/logic/firebase_notifier.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/model/purchasable_product.dart';
 import 'package:hangr/model/store_state.dart';
 import 'package:hangr/repo/iap_repo.dart';
@@ -63,7 +64,7 @@ class IAP extends ChangeNotifier {
   }
 
   void _updateStreamOnError(dynamic error) {
-    debugPrint(error.toString());
+    Logger.reportError(null, Exception(error));
   }
 
   Future<void> loadPurchases() async {
@@ -84,7 +85,7 @@ class IAP extends ChangeNotifier {
     const ids = <String>{storeKeySubscription};
     final response = await iapConnection.queryProductDetails(ids);
     for (final element in response.notFoundIDs) {
-      debugPrint('Purchase $element not found');
+      Logger.log('Product $element not found.');
     }
     products =
         response.productDetails.map((e) => PurchasableProduct(e)).toList();
@@ -107,21 +108,20 @@ class IAP extends ChangeNotifier {
     }
 
     if (purchaseDetails.pendingCompletePurchase) {
-      await iapConnection.completePurchase(purchaseDetails);
+      try {
+        await iapConnection.completePurchase(purchaseDetails);
+      } on Exception catch (e, trace) {
+        Logger.reportError(trace, e);
+      }
     }
   }
 
   Future<void> _updateUserSubscription() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (firebaseNotifier.loggedIn) {
-      await prefs.setBool('is_premium_user', iapRepo.hasActiveSubscription);
-    }
     if (!firebaseNotifier.loggedIn || !iapRepo.hasActiveSubscription) {
-      prefs.setBool('is_premium_user', false);
       if ((prefs.getInt('camera_quality') ?? 0) == 100) {
         await prefs.setInt('camera_quality', 75);
       }
-      prefs.setBool('backup', false);
     }
   }
 

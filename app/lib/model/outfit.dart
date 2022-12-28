@@ -27,8 +27,9 @@ class Outfit {
   final List<String> wearableIds;
   final String imagePath;
   final DateTime timeMade;
+  bool uploaded = false;
 
-  const Outfit(
+  Outfit(
     this.id,
     this.wearableIds,
     this.type,
@@ -38,6 +39,9 @@ class Outfit {
     this.imagePath,
     this.timeMade,
   );
+
+  set isUploaded(bool uploaded) => this.uploaded = uploaded;
+  bool get isUploaded => uploaded;
 
   factory Outfit.fromJson(Map<String, dynamic> json) => _$OutfitFromJson(json);
   Map<String, dynamic> toJson() => _$OutfitToJson(this);
@@ -50,7 +54,12 @@ class MyOutfits extends ChangeNotifier {
   MyOutfits(this._outfits, this._handler);
 
   Future<void> addOutfit(Outfit o) async {
+    final index = _outfits.indexWhere((element) => element.id == o.id);
+    if (index != -1) {
+      await removeOutfit(_outfits[index]);
+    }
     _outfits.add(o);
+
     await _handler.writeOutfits(_outfits);
     notifyListeners();
   }

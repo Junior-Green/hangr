@@ -12,7 +12,7 @@ final darkTheme = ThemeData(
     primary: Colors.black,
     onPrimary: Colors.white,
     secondary: Colors.grey[900]!,
-    onSecondary: const Color.fromARGB(128, 214, 214, 214),
+    onSecondary: const Color.fromARGB(255, 108, 108, 108),
     tertiary: const Color.fromARGB(255, 210, 3, 79),
   ),
   cupertinoOverrideTheme: const CupertinoThemeData(
@@ -61,7 +61,6 @@ final lightTheme = ThemeData(
     onSecondary: const Color.fromARGB(255, 180, 180, 180),
     tertiary: const Color.fromARGB(255, 210, 3, 79),
   ),
-
   textTheme: Typography.blackCupertino,
   scaffoldBackgroundColor: Colors.white,
   textSelectionTheme: const TextSelectionThemeData(

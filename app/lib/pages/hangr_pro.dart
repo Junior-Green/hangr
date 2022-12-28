@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:hangr/constants.dart';
 import 'package:hangr/logic/alert.dart';
 import 'package:hangr/logic/iap.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/model/custom_icons.dart';
 import 'package:hangr/model/purchasable_product.dart';
 import 'package:hangr/model/store_state.dart';
@@ -299,8 +300,17 @@ class HangrPro {
                   TextButton(
                     onPressed: () async {
                       await HapticFeedback.heavyImpact();
-                      await iap.buy(product);
-
+                      try {
+                        await iap.buy(product);
+                      } on Exception catch (e, trace) {
+                        Logger.reportError(trace, e);
+                        // ignore: use_build_context_synchronously
+                        await showMessageAlert(
+                          context,
+                          'Purchase Failure',
+                          'Something went wrong when attempting to purchase the subscription.',
+                        );
+                      }
                       // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     },

@@ -1,1 +1,0 @@
-enum TransferType { download, upload }

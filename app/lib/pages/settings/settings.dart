@@ -17,7 +17,6 @@ import 'package:hangr/pages/settings/reminders_settings.dart';
 import 'package:hangr/pages/settings/theme_settings.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatelessWidget {
@@ -28,13 +27,20 @@ class Settings extends StatelessWidget {
     Notifications notifications,
     IAP iap,
     CloudStorage storage,
+    MyWearables wearables,
+    MyOutfits outfits,
   ) {
     _settingPages = <Widget>[
       Account(iap),
       ThemeSettings(handler),
       Reminders(notifications),
       CameraSettings(iap),
-      CloudBackup(iap, storage),
+      CloudBackup(
+        iap,
+        storage,
+        wearables,
+        outfits,
+      ),
       const SizedBox.shrink(),
       const SizedBox.shrink(),
       const PrivacyPolicy(),

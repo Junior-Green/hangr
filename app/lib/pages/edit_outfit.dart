@@ -568,10 +568,27 @@ class _EditOutfitState extends State<EditOutfit> {
                 aspectRatio: 3 / 4,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.all(Radius.circular(15)),
-                  child: Image.file(
-                    File(e.imagePath),
-                    fit: BoxFit.fill,
-                  ),
+                  child: File(e.imagePath).existsSync()
+                      ? Image.file(
+                          File(e.imagePath),
+                          fit: BoxFit.fill,
+                        )
+                      : const ColoredBox(
+                          color: Colors.grey,
+                          child: Center(
+                            child: FittedBox(
+                              fit: BoxFit.fill,
+                              child: Text(
+                                'No Image',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 50,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -921,7 +938,6 @@ class _EditOutfitState extends State<EditOutfit> {
         widget._outfit.imagePath,
         widget._outfit.timeMade,
       );
-      await widget._outfits.removeOutfit(widget._outfit);
       await widget._outfits.addOutfit(newOutfit);
       await File(widget._outfit.imagePath).writeAsBytes(_outfitImage!);
 

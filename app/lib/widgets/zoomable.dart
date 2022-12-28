@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focused_menu/focused_menu.dart';
@@ -13,6 +14,7 @@ abstract class Zoomable extends StatelessWidget {
   final String _imagePath;
   final DateTime _time;
   final String? _bottomLabel;
+  final bool isUploaded;
   static const _aspectRatio = 3 / 4;
 
   const Zoomable(
@@ -21,8 +23,9 @@ abstract class Zoomable extends StatelessWidget {
     this._subtitle,
     this._imagePath,
     this._time,
-    this._bottomLabel,
-  );
+    this._bottomLabel, {
+    this.isUploaded = false,
+  });
 
   @override
   Widget build(BuildContext context) => FocusedMenuHolder(
@@ -44,15 +47,40 @@ abstract class Zoomable extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.all(Radius.circular(15)),
-                child: AspectRatio(
-                  aspectRatio: _aspectRatio,
-                  child: Image.file(
-                    File(_imagePath),
-                    fit: BoxFit.fill,
+              child: Stack(
+                alignment: AlignmentDirectional.bottomEnd,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(15)),
+                    child: AspectRatio(
+                      aspectRatio: _aspectRatio,
+                      child: File(_imagePath).existsSync()
+                          ? Image.file(
+                              File(_imagePath),
+                              fit: BoxFit.fill,
+                            )
+                          : ColoredBox(
+                              color: Theme.of(context).colorScheme.onSecondary,
+                              child: const Center(
+                                child: Text(
+                                  'No Image',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                              ),
+                            ),
+                    ),
                   ),
-                ),
+                  if (isUploaded)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4, bottom: 4),
+                      child: Icon(
+                        CupertinoIcons.cloud_download_fill,
+                        color: Colors.grey.withOpacity(0.5),
+                        size: 20,
+                      ),
+                    ),
+                ],
               ),
             ),
             if (_bottomLabel != null)
@@ -110,10 +138,30 @@ abstract class Zoomable extends StatelessWidget {
               aspectRatio: 3 / 4,
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(20)),
-                child: Image.file(
-                  File(_imagePath),
-                  fit: BoxFit.fill,
-                ),
+                child: File(_imagePath).existsSync()
+                    ? Image.file(
+                        File(_imagePath),
+                        fit: BoxFit.fill,
+                      )
+                    : ColoredBox(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSecondary
+                            .withAlpha(255),
+                        child: const Center(
+                          child: FittedBox(
+                            fit: BoxFit.fill,
+                            child: Text(
+                              'No Image',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 50,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(

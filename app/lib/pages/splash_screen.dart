@@ -10,6 +10,7 @@ import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/file_handler.dart';
 import 'package:hangr/logic/firebase_notifier.dart';
 import 'package:hangr/logic/iap.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/logic/notifications.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/calendar_map.dart';
@@ -23,14 +24,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({Key? key}) : super(key: key);
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  _LoadingScreenState createState() => _LoadingScreenState();
+  _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _LoadingScreenState extends State<LoadingScreen> {
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -52,6 +53,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
   Future<void> initApp() async {
     try {
       final FileHandler handler = FileHandler();
+      await handler.isInitialized.future;
+
       final CalendarMap calendarMap =
           CalendarMap(await handler.readCalendarMap(), handler);
       final MyOutfits outfits = MyOutfits(await handler.readOutfits(), handler);
@@ -76,17 +79,18 @@ class _LoadingScreenState extends State<LoadingScreen> {
         final ByteData byteData =
             await rootBundle.load('assets/images/shirt.jpg');
 
-        final File file = await File('${directory.path}/shirt.jpg').create();
+        final File file = await File('${directory.path}/photos/shirt.jpg')
+            .create(recursive: true);
         await file.writeAsBytes(
           byteData.buffer
               .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes),
         );
         final List<Wearable> wearablesToAdd = _getWearables(
-          '${directory.path}/shirt.jpg',
+          '${directory.path}/photos/shirt.jpg',
           DateTime(date.year, date.month, date.day),
         );
         for (final w in wearablesToAdd) {
-          wearables.addWearable(w);
+          await wearables.addWearable(w);
         }
       }
 
@@ -113,6 +117,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
                 context.read<FirebaseNotifier>(),
                 context.read<MyWearables>(),
                 context.read<MyOutfits>(),
+                context.read<CalendarMap>(),
                 context.read<IAPRepo>(),
               ),
             ),
@@ -128,9 +133,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
         ),
         const Duration(milliseconds: 500),
       );
-    } on Exception catch (e) {
+    } on Exception catch (e, trace) {
       if (kDebugMode) {
-        print(e);
+        Logger.log('App startup error.');
+        Logger.reportError(trace, e);
       }
     }
   }

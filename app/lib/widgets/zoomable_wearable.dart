@@ -13,8 +13,9 @@ class ZoomableWearable extends Zoomable {
           _wearable.name,
           _wearable.brand,
           _wearable.imagePath,
-          _wearable.timeTaken,
+          _wearable.timeCreated,
           bottomLabel,
+          isUploaded: _wearable.isUploaded,
         );
 
   Wearable get wearable => _wearable;

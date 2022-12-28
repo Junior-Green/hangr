@@ -15,6 +15,7 @@ class ZoomableOutfit extends Zoomable {
           _outfit.imagePath,
           _outfit.timeMade,
           bottomLabel,
+          isUploaded: _outfit.isUploaded,
         );
 
   Outfit get outfit => _outfit;

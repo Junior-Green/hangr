@@ -1,13 +1,12 @@
 import 'dart:io' show Platform;
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hangr/logic/alert.dart';
 import 'package:hangr/logic/iap.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/pages/hangr_pro.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Account extends StatefulWidget {
   final IAP iap;
@@ -18,30 +17,32 @@ class Account extends StatefulWidget {
 }
 
 class _AccountState extends State<Account> {
-  late final ValueNotifier<IAP> iap;
+  bool _isUprgradeDisabled = false;
   @override
   void initState() {
-    iap = ValueNotifier<IAP>(widget.iap);
+    widget.iap.addListener(_handleIAPUpdate);
     super.initState();
   }
 
+  void _handleIAPUpdate() => setState(() {});
+
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<IAP>(
-        valueListenable: iap,
-        builder: (_, iap, __) => Scaffold(
-          appBar: AppBar(
-            elevation: 0,
-            title: const Text(
-              'Account',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          title: const Text(
+            'Account',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: AbsorbPointer(
+              absorbing: _isUprgradeDisabled,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: !iap.iapRepo.isLoggedIn
+                children: !widget.iap.iapRepo.isLoggedIn
                     ? _getLoggedOutView()
                     : _getLoggedInView(),
               ),
@@ -49,6 +50,12 @@ class _AccountState extends State<Account> {
           ),
         ),
       );
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.iap.removeListener(_handleIAPUpdate);
+  }
 
   List<Widget> _getLoggedInView() {
     const rowHeight = 40.0;
@@ -65,12 +72,12 @@ class _AccountState extends State<Account> {
 
     final widgets = <Widget>[];
 
-    if (!iap.value.iapRepo.isLoggedIn) {
+    if (!widget.iap.iapRepo.isLoggedIn) {
       Navigator.pop(context);
       return [];
     }
 
-    final providers = iap.value.iapRepo.user!.providerData;
+    final providers = widget.iap.iapRepo.user!.providerData;
 
     for (final data in providers) {
       if (data.providerId == 'google.com') {
@@ -92,7 +99,7 @@ class _AccountState extends State<Account> {
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             Text(
-              iap.value.iapRepo.hasActiveSubscription ? 'PRO' : 'FREE',
+              widget.iap.iapRepo.hasActiveSubscription ? 'PRO' : 'FREE',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSecondary,
               ),
@@ -123,14 +130,11 @@ class _AccountState extends State<Account> {
                   child: GestureDetector(
                     onTap: () async {
                       await HapticFeedback.mediumImpact();
-
                       try {
                         await widget.iap.firebaseNotifier
                             .linkAccountWithGoogle();
-                      } catch (e) {
-                        if (kDebugMode) {
-                          print(e);
-                        }
+                      } on Exception catch (e, trace) {
+                        Logger.reportError(trace, e);
                         if (!mounted) return;
                         await showMessageAlert(
                           context,
@@ -155,34 +159,7 @@ class _AccountState extends State<Account> {
                   child: GestureDetector(
                     onTap: () async {
                       await HapticFeedback.mediumImpact();
-                      try {
-                        await widget.iap.firebaseNotifier
-                            .linkAccountWithApple();
-                      } on FirebaseAuthException catch (e) {
-                        if (kDebugMode) {
-                          print(e);
-                        }
-                        final errorMessage = (e.code ==
-                                'credential-already-in-use')
-                            ? 'Account already exists under another email address.'
-                            : 'Something went wrong when trying to link to your existing account.';
-                        if (!mounted) return;
-                        await showMessageAlert(
-                          context,
-                          'Linking Error',
-                          errorMessage,
-                        );
-                      } catch (e) {
-                        if (kDebugMode) {
-                          print(e);
-                        }
-                        if (!mounted) return;
-                        await showMessageAlert(
-                          context,
-                          'Linking Error',
-                          'Something went wrong when trying to link to your existing account.',
-                        );
-                      }
+                      await _handleAppleLinking();
                       setState(() {});
                     },
                     child: SizedBox(
@@ -204,14 +181,21 @@ class _AccountState extends State<Account> {
     }
 
     widgets.addAll([
-      if (!iap.value.iapRepo.hasActiveSubscription) ...[
+      if (!widget.iap.iapRepo.hasActiveSubscription) ...[
         SizedBox(
           height: rowHeight,
           child: GestureDetector(
             onTap: () async {
-              await HapticFeedback.lightImpact();
-              if (!mounted) return;
-              await HangrPro.showPremiumBottomSheet(context, widget.iap);
+              if (!_isUprgradeDisabled) {
+                await HapticFeedback.lightImpact();
+                if (!mounted) return;
+                await HangrPro.showPremiumBottomSheet(context, widget.iap);
+                _isUprgradeDisabled = true;
+                Future.delayed(
+                  const Duration(seconds: 5),
+                  () => setState(() => _isUprgradeDisabled = false),
+                );
+              }
               setState(() {});
             },
             behavior: HitTestBehavior.translucent,
@@ -292,12 +276,8 @@ class _AccountState extends State<Account> {
                 try {
                   await HapticFeedback.mediumImpact();
                   await widget.iap.firebaseNotifier.logInWithApple();
-                  await Future.delayed(const Duration(milliseconds: 500));
-                  setState(() {});
-                } catch (e) {
-                  if (kDebugMode) {
-                    print(e);
-                  }
+                } on Exception catch (e, trace) {
+                  Logger.reportError(trace, e);
                 }
               },
               child: Container(
@@ -325,12 +305,8 @@ class _AccountState extends State<Account> {
               try {
                 await HapticFeedback.mediumImpact();
                 await widget.iap.firebaseNotifier.logInWithGoogle();
-                await Future.delayed(const Duration(milliseconds: 500));
-                setState(() {});
-              } catch (e) {
-                if (kDebugMode) {
-                  print(e);
-                }
+              } on Exception catch (e, trace) {
+                Logger.reportError(trace, e);
               }
             },
             child: SizedBox(
@@ -346,5 +322,30 @@ class _AccountState extends State<Account> {
     );
 
     return widgets;
+  }
+
+  Future<void> _handleAppleLinking() async {
+    try {
+      await widget.iap.firebaseNotifier.linkAccountWithApple();
+    } on FirebaseAuthException catch (e, trace) {
+      Logger.reportError(trace, e);
+      final errorMessage = (e.code == 'credential-already-in-use')
+          ? 'Account already exists under another email address.'
+          : 'Something went wrong when trying to link to your existing account.';
+      if (!mounted) return;
+      await showMessageAlert(
+        context,
+        'Linking Error',
+        errorMessage,
+      );
+    } on Exception catch (e, trace) {
+      Logger.reportError(trace, e);
+      if (!mounted) return;
+      await showMessageAlert(
+        context,
+        'Linking Error',
+        'Something went wrong when trying to link to your existing account.',
+      );
+    }
   }
 }
