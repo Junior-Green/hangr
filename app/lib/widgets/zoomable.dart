@@ -76,7 +76,10 @@ abstract class Zoomable extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 4, bottom: 4),
                       child: Icon(
                         CupertinoIcons.cloud_download_fill,
-                        color: Colors.grey.withOpacity(0.5),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.5),
                         size: 20,
                       ),
                     ),

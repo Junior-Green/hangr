@@ -5,15 +5,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/togglable_image_group.dart';
 import 'package:hangr/model/wearable.dart';
 import 'package:hangr/widgets/toggable_image.dart';
+import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class EditWearable extends StatefulWidget {
   final Wearable _wearable;
-  final MyWearables _wearables;
-  const EditWearable(this._wearable, this._wearables);
+  const EditWearable(this._wearable);
 
   @override
   State<EditWearable> createState() => _EditWearableState();
@@ -44,7 +45,6 @@ class _EditWearableState extends State<EditWearable>
           setState(() {
             FocusScope.of(context).unfocus();
             if (_controller.index == 4) {
-              _changeOpacity();
               _finalize();
             }
           });
@@ -289,17 +289,28 @@ class _EditWearableState extends State<EditWearable>
             ),
           ),
         ),
-        Center(
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 500),
-            opacity: _opacity,
-            child: const Text(
-              "You're Good to Go !",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-              textAlign: TextAlign.center,
+        if (_opacity == 0)
+          Center(
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
-          ),
-        )
+          )
+        else
+          Center(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 500),
+              opacity: _opacity,
+              child: const Text(
+                "You're Good to Go !",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
       ];
 
   Future<void> _finalize() async {
@@ -318,28 +329,34 @@ class _EditWearableState extends State<EditWearable>
       await _dialog();
       if (!mounted) return;
       Navigator.pop(context, false);
+      return;
     }
+    final newWearable = Wearable(
+      widget._wearable.id,
+      wearableType,
+      newBrand,
+      newColor,
+      widget._wearable.imagePath,
+      newName,
+      widget._wearable.timeCreated,
+    );
 
     try {
-      final newWearable = Wearable(
-        widget._wearable.id,
-        wearableType!,
-        newBrand,
-        newColor,
-        widget._wearable.imagePath,
-        newName,
-        widget._wearable.timeCreated,
-      );
       if (!mounted) return;
+      final cloudStorage = context.read<CloudStorage>();
+      final wearables = context.read<MyWearables>();
+      cloudStorage.syncStorage().whenComplete(
+        () async {
+          await wearables.addWearable(newWearable);
+          await cloudStorage.uploadWearables();
+        },
+      ).catchError((e) async {
+        await _dialog();
+        if (!mounted) return;
+        Navigator.pop(context);
+      });
 
-      final image = await File(newWearable.imagePath).readAsBytes();
-
-      if (!mounted) return;
-      await widget._wearables.addWearable(newWearable);
-
-      if (!await File(newWearable.imagePath).exists()) {
-        await File(newWearable.imagePath).writeAsBytes(image);
-      }
+      _changeOpacity();
 
       await _player.play(
         AssetSource('audio/clothing_creation_sfx.mp3'),
@@ -348,7 +365,7 @@ class _EditWearableState extends State<EditWearable>
       );
       HapticFeedback.heavyImpact();
 
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await Future.delayed(const Duration(milliseconds: 1000));
       if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hangr/logic/iap.dart';
-import 'package:hangr/logic/notifications.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/calendar_map.dart';
 import 'package:hangr/model/custom_icons.dart';
@@ -46,22 +45,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           controller: _controller,
           physics: const NeverScrollableScrollPhysics(),
           children: [
-            ChangeNotifierProvider.value(
-              value: context.read<IAP>(),
-              child: HomeCamera(_controller),
-            ),
+            HomeCamera(_controller),
             ListenableProvider.value(
               value: _isVisible,
-              child: HomeCalendar(notifications: context.read<Notifications>()),
+              child: const HomeCalendar(),
             ),
             HomeWardrobe(_controller),
           ],
         ),
         bottomNavigationBar: ValueListenableBuilder<bool>(
-          builder: (BuildContext context, value, Widget? child) =>
+          builder: (BuildContext context, isVisisble, Widget? child) =>
               AnimatedOpacity(
             duration: const Duration(milliseconds: 250),
-            opacity: value ? 1 : 0,
+            opacity: isVisisble ? 1 : 0,
             child: DecoratedBox(
               position: DecorationPosition.foreground,
               decoration: BoxDecoration(
@@ -73,27 +69,30 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               ),
               child: ColoredBox(
                 color: Theme.of(context).colorScheme.primary,
-                child: TabBar(
-                  onTap: (index) {
-                    if ((_controller.indexIsChanging &&
-                            _controller.previousIndex == 0) ||
-                        _controller.index == 0) {
-                      _controller.index = 0;
-                    } else {
-                      HapticFeedback.mediumImpact();
-                    }
-                  },
-                  enableFeedback: true,
-                  controller: _controller,
-                  tabs: _tabs,
-                  indicatorWeight: 3,
-                  labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-                  indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
-                  labelColor: Theme.of(context).colorScheme.tertiary,
-                  unselectedLabelColor:
-                      Theme.of(context).colorScheme.onSecondary,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  indicatorColor: Theme.of(context).colorScheme.tertiary,
+                child: IgnorePointer(
+                  ignoring: !isVisisble,
+                  child: TabBar(
+                    onTap: (index) {
+                      if ((_controller.indexIsChanging &&
+                              _controller.previousIndex == 0) ||
+                          _controller.index == 0) {
+                        _controller.index = 0;
+                      } else {
+                        HapticFeedback.mediumImpact();
+                      }
+                    },
+                    enableFeedback: true,
+                    controller: _controller,
+                    tabs: _tabs,
+                    indicatorWeight: 3,
+                    labelPadding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+                    indicatorPadding: const EdgeInsets.fromLTRB(0, 0, 0, 30),
+                    labelColor: Theme.of(context).colorScheme.tertiary,
+                    unselectedLabelColor:
+                        Theme.of(context).colorScheme.onSecondary,
+                    indicatorSize: TabBarIndicatorSize.label,
+                    indicatorColor: Theme.of(context).colorScheme.tertiary,
+                  ),
                 ),
               ),
             ),

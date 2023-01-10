@@ -17,7 +17,6 @@ class Account extends StatefulWidget {
 }
 
 class _AccountState extends State<Account> {
-  bool _isUprgradeDisabled = false;
   @override
   void initState() {
     widget.iap.addListener(_handleIAPUpdate);
@@ -38,14 +37,11 @@ class _AccountState extends State<Account> {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
-            child: AbsorbPointer(
-              absorbing: _isUprgradeDisabled,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: !widget.iap.iapRepo.isLoggedIn
-                    ? _getLoggedOutView()
-                    : _getLoggedInView(),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: !widget.iap.iapRepo.isLoggedIn
+                  ? _getLoggedOutView()
+                  : _getLoggedInView(),
             ),
           ),
         ),
@@ -186,17 +182,9 @@ class _AccountState extends State<Account> {
           height: rowHeight,
           child: GestureDetector(
             onTap: () async {
-              if (!_isUprgradeDisabled) {
-                await HapticFeedback.lightImpact();
-                if (!mounted) return;
-                await HangrPro.showPremiumBottomSheet(context, widget.iap);
-                _isUprgradeDisabled = true;
-                Future.delayed(
-                  const Duration(seconds: 5),
-                  () => setState(() => _isUprgradeDisabled = false),
-                );
-              }
-              setState(() {});
+              await HapticFeedback.lightImpact();
+              if (!mounted) return;
+              await HangrPro.showPremiumBottomSheet(context, widget.iap);
             },
             behavior: HitTestBehavior.translucent,
             child: Row(

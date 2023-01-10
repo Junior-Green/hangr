@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:hangr/logic/cloud_storage.dart';
+import 'package:hangr/logic/logger.dart';
 import 'package:hangr/logic/togglable_image_group.dart';
 import 'package:hangr/model/custom_icons.dart';
 import 'package:hangr/model/outfit.dart';
@@ -15,14 +17,13 @@ import 'package:hangr/widgets/toggable_image.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class EditOutfit extends StatefulWidget {
   final Outfit _outfit;
-  final MyOutfits _outfits;
-  final MyWearables _wearables;
 
-  const EditOutfit(this._outfit, this._outfits, this._wearables);
+  const EditOutfit(this._outfit);
 
   @override
   State<EditOutfit> createState() => _EditOutfitState();
@@ -50,6 +51,7 @@ class _EditOutfitState extends State<EditOutfit> {
 
   Uint8List? _outfitImage;
   ToggableImageGroup<OutfitType>? _toggleGroup;
+  bool _finalizing = false;
 
   @override
   void initState() {
@@ -69,7 +71,8 @@ class _EditOutfitState extends State<EditOutfit> {
 
     _outfitImage = File(widget._outfit.imagePath).readAsBytesSync();
 
-    final wearables = widget._wearables.getWearables;
+    final wearables =
+        Provider.of<MyWearables>(context, listen: false).getWearables;
 
     try {
       for (final id in widget._outfit.wearableIds) {
@@ -95,7 +98,8 @@ class _EditOutfitState extends State<EditOutfit> {
             throw Error();
         }
       }
-    } catch (e) {
+    } on Exception catch (e, trace) {
+      Logger.reportError(trace, e);
       Navigator.pop(context);
     }
 
@@ -169,22 +173,28 @@ class _EditOutfitState extends State<EditOutfit> {
                     ),
                   ),
                 ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 3, horizontal: 30),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: isEnabled
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context)
-                              .colorScheme
-                              .onPrimary
-                              .withAlpha(50),
-                    ),
-                  ),
-                ),
+                child: _finalizing
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 3,
+                          horizontal: 30,
+                        ),
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: isEnabled
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary
+                                    .withAlpha(50),
+                          ),
+                        ),
+                      ),
               ),
             )
           ],
@@ -545,7 +555,9 @@ class _EditOutfitState extends State<EditOutfit> {
     WearableType type,
     List<Wearable> wearables,
   ) async {
-    final List<Widget> wearablesToShow = widget._wearables.getWearables
+    final List<Widget> wearablesToShow = context
+        .read<MyWearables>()
+        .getWearables
         .where(
           (element) => element.type == type && !wearables.contains(element),
         )
@@ -915,6 +927,12 @@ class _EditOutfitState extends State<EditOutfit> {
   }
 
   Future<void> _finalize() async {
+    HapticFeedback.heavyImpact();
+    setState(() {
+      _finalizing = true;
+      _isEnabled.value = false;
+    });
+
     final outfitType = _getOutfitType();
     final ids = _tops
         .followedBy(_bottoms)
@@ -923,29 +941,44 @@ class _EditOutfitState extends State<EditOutfit> {
         .followedBy(_accessories)
         .map((e) => e.id);
 
-    if (outfitType == null) {
+    if (outfitType == null || _outfitImage == null) {
       await _exit();
     }
 
-    try {
-      final newOutfit = Outfit(
-        widget._outfit.id,
-        ids.toList(),
-        outfitType!,
-        _nameEditingController.text,
-        _primaryColorEditingController.text,
-        _secondaryColorEditingController.text,
-        widget._outfit.imagePath,
-        widget._outfit.timeMade,
-      );
-      await widget._outfits.addOutfit(newOutfit);
-      await File(widget._outfit.imagePath).writeAsBytes(_outfitImage!);
+    final newOutfit = Outfit(
+      widget._outfit.id,
+      ids.toList(),
+      outfitType!,
+      _nameEditingController.text,
+      _primaryColorEditingController.text,
+      _secondaryColorEditingController.text,
+      widget._outfit.imagePath,
+      widget._outfit.timeMade,
+    );
 
+    try {
       if (!mounted) return;
 
-      HapticFeedback.heavyImpact();
+      final cloudStorage = context.read<CloudStorage>();
+      final outfits = context.read<MyOutfits>();
+
+      cloudStorage.syncStorage().whenComplete(
+        () async {
+          final newImage = File(newOutfit.imagePath);
+          await newImage.writeAsBytes(_outfitImage!);
+          await outfits.addOutfit(newOutfit);
+          cloudStorage.uploadImage(newImage);
+          cloudStorage.uploadOutfits();
+        },
+      ).catchError((e) async {
+        await _exit();
+        if (!mounted) return;
+        Navigator.pop(context);
+      });
+
       Navigator.pop(context, true);
-    } catch (e) {
+    } on Exception catch (e, trace) {
+      Logger.reportError(trace, e);
       await _exit();
     }
   }

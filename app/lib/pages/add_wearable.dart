@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/togglable_image_group.dart';
 import 'package:hangr/model/wearable.dart';
 import 'package:hangr/widgets/toggable_image.dart';
@@ -47,7 +48,6 @@ class _AddWearableState extends State<AddWearable>
             FocusScope.of(context).unfocus();
             _checkValidity();
             if (_controller.index == 4) {
-              _changeOpacity();
               _finalize();
             }
           });
@@ -274,17 +274,28 @@ class _AddWearableState extends State<AddWearable>
             ),
           ),
         ),
-        Center(
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 500),
-            opacity: _opacity,
-            child: const Text(
-              "You're Good to Go !",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-              textAlign: TextAlign.center,
+        if (_opacity == 0)
+          Center(
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
-          ),
-        )
+          )
+        else
+          Center(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 500),
+              opacity: _opacity,
+              child: const Text(
+                "You're Good to Go !",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
       ];
 
   Future<void> _finalize() async {
@@ -313,8 +324,17 @@ class _AddWearableState extends State<AddWearable>
       );
       if (!mounted) return;
 
-      await context.read<MyWearables>().addWearable(newWearable);
-      await File(imagePath).writeAsBytes(widget._image);
+      final storage = context.read<CloudStorage>();
+      final wearables = context.read<MyWearables>();
+      await context.read<CloudStorage>().syncStorage().whenComplete(
+        () async {
+          await wearables.addWearable(newWearable);
+          await File(imagePath).writeAsBytes(widget._image);
+          await storage.uploadWearables();
+        },
+      );
+
+      _changeOpacity();
 
       await _player.play(
         AssetSource('audio/clothing_creation_sfx.mp3'),
@@ -323,7 +343,7 @@ class _AddWearableState extends State<AddWearable>
       );
       HapticFeedback.heavyImpact();
 
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await Future.delayed(const Duration(milliseconds: 1000));
 
       if (!mounted) return;
 

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/logger.dart';
 import 'package:hangr/logic/togglable_image_group.dart';
 import 'package:hangr/model/custom_icons.dart';
@@ -17,14 +18,12 @@ import 'package:hangr/widgets/zoomable_wearable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:uuid/uuid.dart';
 
 class AddOutfit extends StatefulWidget {
-  final MyOutfits _outfits;
-  final MyWearables _wearables;
-
-  const AddOutfit(this._wearables, this._outfits);
+  const AddOutfit();
 
   @override
   State<AddOutfit> createState() => _AddOutfitState();
@@ -52,6 +51,7 @@ class _AddOutfitState extends State<AddOutfit> {
 
   Uint8List? _outfitImage;
   ToggableImageGroup<OutfitType>? _toggleGroup;
+  bool _finalizing = false;
 
   @override
   void initState() {
@@ -140,22 +140,28 @@ class _AddOutfitState extends State<AddOutfit> {
                     Colors.transparent,
                   ),
                 ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 3, horizontal: 30),
-                  child: Text(
-                    'Save',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: isEnabled
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context)
-                              .colorScheme
-                              .onPrimary
-                              .withAlpha(50),
-                    ),
-                  ),
-                ),
+                child: _finalizing
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 3,
+                          horizontal: 30,
+                        ),
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: isEnabled
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary
+                                    .withAlpha(50),
+                          ),
+                        ),
+                      ),
               ),
             )
           ],
@@ -540,7 +546,9 @@ class _AddOutfitState extends State<AddOutfit> {
     WearableType type,
     List<Wearable> wearables,
   ) async {
-    final List<Widget> wearablesToShow = widget._wearables.getWearables
+    final List<Widget> wearablesToShow = context
+        .read<MyWearables>()
+        .getWearables
         .where(
           (element) => element.type == type && !wearables.contains(element),
         )
@@ -910,6 +918,12 @@ class _AddOutfitState extends State<AddOutfit> {
   }
 
   Future<void> _finalize() async {
+    HapticFeedback.heavyImpact();
+    setState(() {
+      _finalizing = true;
+      _isEnabled.value = false;
+    });
+
     final dir = await getTemporaryDirectory();
     final dirPath = dir.path;
     const generator = Uuid();
@@ -938,12 +952,21 @@ class _AddOutfitState extends State<AddOutfit> {
         imagePath,
         DateTime.now(),
       );
-      await widget._outfits.addOutfit(newOutfit);
-      await File(imagePath).writeAsBytes(_outfitImage!);
 
       if (!mounted) return;
 
-      HapticFeedback.heavyImpact();
+      final cloudStorage = context.read<CloudStorage>();
+      final outfits = context.read<MyOutfits>();
+
+      cloudStorage.syncStorage().whenComplete(
+        () async {
+          await File(imagePath).writeAsBytes(_outfitImage!);
+          await outfits.addOutfit(newOutfit);
+          await cloudStorage.uploadOutfits();
+        },
+      );
+
+      if (!mounted) return;
       Navigator.pop(context, true);
     } catch (e) {
       await _exit();

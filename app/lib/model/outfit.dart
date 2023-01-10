@@ -20,13 +20,15 @@ enum OutfitType {
 @JsonSerializable(explicitToJson: true)
 class Outfit {
   final String id;
-  final String name;
-  final String primaryColor;
-  final String secondaryColor;
-  final OutfitType type;
-  final List<String> wearableIds;
-  final String imagePath;
   final DateTime timeMade;
+
+  String name;
+  String primaryColor;
+  String secondaryColor;
+  OutfitType type;
+  List<String> wearableIds;
+  String imagePath;
+
   bool uploaded = false;
 
   Outfit(
@@ -56,10 +58,17 @@ class MyOutfits extends ChangeNotifier {
   Future<void> addOutfit(Outfit o) async {
     final index = _outfits.indexWhere((element) => element.id == o.id);
     if (index != -1) {
-      await removeOutfit(_outfits[index]);
+      final oldOutfit = _outfits[index];
+      oldOutfit.type = o.type;
+      oldOutfit.imagePath = o.imagePath;
+      oldOutfit.name = o.name;
+      oldOutfit.primaryColor = o.primaryColor;
+      oldOutfit.secondaryColor = o.secondaryColor;
+      oldOutfit.wearableIds = o.wearableIds;
+      oldOutfit.isUploaded = o.isUploaded;
+    } else {
+      _outfits.add(o);
     }
-    _outfits.add(o);
-
     await _handler.writeOutfits(_outfits);
     notifyListeners();
   }

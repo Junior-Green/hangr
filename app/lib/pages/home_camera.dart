@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:hangr/constants.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/iap.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/wearable.dart';
@@ -84,8 +85,15 @@ class _HomeCameraState extends State<HomeCamera> {
 
     await fadeInPageTransition(
       context,
-      ChangeNotifierProvider.value(
-        value: context.read<MyWearables>(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(
+            value: context.read<MyWearables>(),
+          ),
+          ChangeNotifierProvider.value(
+            value: context.read<CloudStorage>(),
+          ),
+        ],
         child: AddWearable(croppedImage),
       ),
       const Duration(milliseconds: 100),
@@ -101,7 +109,10 @@ class _HomeCameraState extends State<HomeCamera> {
       desc: "Do you want to take a picture or use an existing one?",
       style: AlertStyle(
         animationType: AnimationType.grow,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+        backgroundColor:
+            Theme.of(context).colorScheme.brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.secondary
+                : Colors.white,
         alertBorder: RoundedRectangleBorder(
           side: BorderSide(color: Theme.of(context).colorScheme.tertiary),
           borderRadius: const BorderRadius.all(Radius.circular(15)),

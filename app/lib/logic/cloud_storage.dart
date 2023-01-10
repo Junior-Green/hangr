@@ -39,7 +39,9 @@ class CloudStorage extends ChangeNotifier {
     this.calendarMap,
     this.repo,
   ) {
-    init().then((value) => _handleSyncing(repo.user));
+    init().then((value) {
+      _handleSyncing(repo.user);
+    });
     _userSubscription = repo.userStream.listen(_handleSyncing);
   }
 
@@ -57,14 +59,26 @@ class CloudStorage extends ChangeNotifier {
 
   Future<void> syncStorage() async {
     final user = repo.user;
-    if (user == null) return;
+    if (user == null || !await _isEnabled() || _isSyncing) return;
+
+    _isSyncing = true;
+    notifyListeners();
 
     try {
+      Logger.log('Syncing wearables...');
       await _syncWearables(user);
+      Logger.log('Syncing wearables complete');
+      Logger.log('Syncing outfits...');
       await _syncOutfits(user);
+      Logger.log('Syncing outfits complete');
+      Logger.log('Syncing calendar map');
       await _syncCalendarMap(user);
+      Logger.log('Syncing calendar map complete');
     } on Exception catch (e) {
       Logger.log(e.toString());
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
     }
   }
 
@@ -96,26 +110,30 @@ class CloudStorage extends ChangeNotifier {
         final Reference imageRef =
             storageRef.child('users/${user.uid}/photos/$fileName');
 
+        bool res = false;
+
         try {
           final meta = await imageRef.getMetadata();
-          if (meta.contentType != 'image/jpeg') continue;
-          final res = await _downloadFile(downloadedImage, imageRef);
-          if (res) {
-            final newWearable = Wearable(
-              wearable.id,
-              wearable.type,
-              wearable.brand,
-              wearable.primaryColor,
-              imagePath,
-              wearable.name,
-              wearable.timeCreated,
-              wearable.last,
-              wearable.times,
-            );
-            newWearable.isUploaded = true;
-            await wearables.addWearable(newWearable);
-            await downloadedImage.copy(imagePath);
+
+          if (meta.contentType == 'image/jpeg' &&
+              !await File(imagePath).exists()) {
+            res = await _downloadFile(downloadedImage, imageRef);
           }
+
+          final newWearable = Wearable(
+            wearable.id,
+            wearable.type,
+            wearable.brand,
+            wearable.primaryColor,
+            imagePath,
+            wearable.name,
+            wearable.timeCreated,
+            wearable.last,
+            wearable.times,
+          );
+          newWearable.isUploaded = true;
+          await wearables.addWearable(newWearable);
+          if (res) await downloadedImage.copy(imagePath);
         } catch (_) {
           continue;
         }
@@ -156,13 +174,11 @@ class CloudStorage extends ChangeNotifier {
         final image = File(wearable.imagePath);
         final fileName = basename(wearable.imagePath);
         final ref = storageRef.child('users/${user.uid}/photos/$fileName');
-
         if (await image.exists()) {
-          try {
+          await ref.getMetadata().onError((e, trace) async {
             await _uploadFile(image, ref);
-          } on Exception {
-            continue;
-          }
+            return FullMetadata({});
+          });
         }
       }
     } on Exception catch (e) {
@@ -206,26 +222,27 @@ class CloudStorage extends ChangeNotifier {
         final downloadedImage = File('$_directoryPath/temp/photos/$fileName');
         final Reference imageRef =
             storageRef.child('users/${user.uid}/photos/$fileName');
+        bool res = false;
 
         try {
           final meta = await imageRef.getMetadata();
-          if (meta.contentType != 'image/jpeg') continue;
-          final res = await _downloadFile(downloadedImage, imageRef);
-          if (res) {
-            final newOutfit = Outfit(
-              outfit.id,
-              outfit.wearableIds,
-              outfit.type,
-              outfit.name,
-              outfit.primaryColor,
-              outfit.secondaryColor,
-              imagePath,
-              outfit.timeMade,
-            );
-            outfit.isUploaded = true;
-            await outfits.addOutfit(newOutfit);
-            await downloadedImage.copy(imagePath);
+          if (meta.contentType == 'image/jpeg') {
+            res = await _downloadFile(downloadedImage, imageRef);
           }
+
+          final newOutfit = Outfit(
+            outfit.id,
+            outfit.wearableIds,
+            outfit.type,
+            outfit.name,
+            outfit.primaryColor,
+            outfit.secondaryColor,
+            imagePath,
+            outfit.timeMade,
+          );
+          outfit.isUploaded = true;
+          await outfits.addOutfit(newOutfit);
+          if (res) await downloadedImage.copy(imagePath);
         } catch (_) {
           continue;
         }
@@ -266,13 +283,8 @@ class CloudStorage extends ChangeNotifier {
         final image = File(outfit.imagePath);
         final fileName = basename(outfit.imagePath);
         final ref = storageRef.child('users/${user.uid}/photos/$fileName');
-
         if (await image.exists()) {
-          try {
-            await _uploadFile(image, ref);
-          } on Exception {
-            continue;
-          }
+          await _uploadFile(image, ref);
         }
       }
     } on Exception catch (e) {
@@ -307,6 +319,7 @@ class CloudStorage extends ChangeNotifier {
       final downloadedCalMap = await handler.readCalendarMap();
       downloadedCalMap.entries.forEach(
         (entry) async {
+          if (entry.value.isEmpty) return;
           await calendarMap.updateOutfit(entry.key, entry.value);
         },
       );
@@ -360,6 +373,10 @@ class CloudStorage extends ChangeNotifier {
     return _handleTask(task);
   }
 
+  Future<void> _deleteFile(Reference ref) async {
+    return ref.delete();
+  }
+
   Future<bool> _handleTask(Task task) async {
     bool result = false;
     await task.then(
@@ -401,51 +418,116 @@ class CloudStorage extends ChangeNotifier {
 
   Future<void> _handleSyncing(User? user) async {
     if (!await _isEnabled() || _isSyncing) return;
-    _isSyncing = true;
-    notifyListeners();
     await syncStorage();
-    _isSyncing = false;
-    notifyListeners();
   }
 
-  Future<bool> uploadWearables() async {
+  Future<bool> uploadImage(File image) async {
     if (!await _isEnabled()) return false;
-    final Directory tempDir = await Directory('$_directoryPath/temp').create();
-    await Directory('${tempDir.path}/data').create();
-    final tempWearables =
-        await File('${tempDir.path}/data/$wearablesPath').create();
-    final storageRef = _storage.ref();
-
-    if (!await tempWearables.exists()) {
-      await tempDir.delete(recursive: true).catchError((e) {
-        Logger.log(e.toString());
-      });
+    if (extension(image.path) != '.jpg' && extension(image.path) != '.jpeg') {
       return false;
     }
+
+    final fileName = basename(image.path);
+    final ref =
+        _storage.ref().child('users/${repo.user?.uid}/photos/$fileName');
+
+    return _uploadFile(image, ref);
+  }
+
+  Future<void> deleteImage(File image) async {
+    if (!await _isEnabled()) return;
+    if (extension(image.path) != '.jpg' && extension(image.path) != '.jpeg') {
+      return;
+    }
+    if (!await image.exists()) return;
+
+    final fileName = basename(image.path);
+    final ref =
+        _storage.ref().child('users/${repo.user?.uid}/photos/$fileName');
+
+    return _deleteFile(ref);
+  }
+
+  Future<void> uploadWearables() async {
+    if (!await _isEnabled()) return;
+    final storageRef = _storage.ref();
 
     //Upload local wearables to cloud
     try {
       final ref =
-          storageRef.child('users/${repo.user!.uid}/data/$wearablesPath');
-      final fWearables = File('$_directoryPath/data/$wearablesPath');
+          storageRef.child('users/${repo.user?.uid}/data/$wearablesPath');
+      final fWearable = File('$_directoryPath/data/$wearablesPath');
 
-      if (await fWearables.exists()) {
-        final res = await _uploadFile(fWearables, ref);
+      if (await fWearable.exists()) {
+        final res = await _uploadFile(fWearable, ref);
         if (!res) {
-          await tempDir.delete(recursive: true).catchError((e) {
-            Logger.log(e.toString());
+          return;
+        }
+      }
+
+      for (final wearable in wearables.getWearables) {
+        final image = File(wearable.imagePath);
+        final fileName = basename(wearable.imagePath);
+        final ref =
+            storageRef.child('users/${repo.user?.uid}/photos/$fileName');
+        if (await image.exists()) {
+          await ref.getMetadata().onError((e, trace) async {
+            await _uploadFile(image, ref);
+            return FullMetadata({});
           });
-          return false;
         }
       }
     } on Exception catch (e) {
       Logger.log(e.toString());
     }
+  }
 
-    await tempDir.delete(recursive: true).catchError((e) {
+  Future<void> uploadOutfits() async {
+    if (!await _isEnabled()) return;
+    final storageRef = _storage.ref();
+
+    //Upload local wearables to cloud
+    try {
+      final ref = storageRef.child('users/${repo.user?.uid}/data/$outfitsPath');
+      final fOutfit = File('$_directoryPath/data/$outfitsPath');
+
+      if (await fOutfit.exists()) {
+        final res = await _uploadFile(fOutfit, ref);
+        if (!res) {
+          return;
+        }
+      }
+
+      for (final outfit in outfits.getOutfits) {
+        final image = File(outfit.imagePath);
+        final fileName = basename(outfit.imagePath);
+        final ref =
+            storageRef.child('users/${repo.user?.uid}/photos/$fileName');
+        if (await image.exists()) {
+          await ref.getMetadata().onError((e, trace) async {
+            await _uploadFile(image, ref);
+            return FullMetadata({});
+          });
+        }
+      }
+    } on Exception catch (e) {
       Logger.log(e.toString());
-    });
+    }
+  }
 
-    return true;
+  Future<void> uploadCalendarMap() async {
+    try {
+      if (!await _isEnabled()) return;
+      final storageRef = _storage.ref();
+      final ref =
+          storageRef.child('users/${repo.user?.uid}/data/$calendarMapPath');
+      final fCalMap = File('$_directoryPath/data/$calendarMapPath');
+
+      if (await fCalMap.exists()) {
+        await _uploadFile(fCalMap, ref);
+      }
+    } on Exception catch (e) {
+      Logger.log(e.toString());
+    }
   }
 }

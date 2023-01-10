@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -181,7 +183,8 @@ class Settings extends StatelessWidget {
     final Uri params = Uri(
       scheme: 'mailto',
       path: 'hangr.canada@gmail.com',
-      query: 'subject=$appName Feedback version - $version&body=',
+      query:
+          'subject=$appName Feedback - $version ${Platform.isIOS ? 'iOS' : 'Android'}&body=',
     );
     if (await canLaunchUrl(params)) {
       await launchUrl(params);

@@ -21,15 +21,16 @@ enum WearableType {
 
 @JsonSerializable(explicitToJson: true)
 class Wearable {
-  final WearableType type;
   final String id;
-  final String name;
-  final String brand;
-  final String primaryColor;
-  final String imagePath;
   final DateTime timeCreated;
+
+  WearableType type;
+  String name;
+  String brand;
+  String primaryColor;
+  String imagePath;
   DateTime? last;
-  int times = 0;
+  int times;
   bool uploaded = false;
 
   Wearable(
@@ -69,9 +70,19 @@ class MyWearables extends ChangeNotifier {
   Future<void> addWearable(Wearable w) async {
     final index = _wearables.indexWhere((element) => element.id == w.id);
     if (index != -1) {
-      await removeWearable(_wearables[index]);
+      final oldWearable = _wearables[index];
+      oldWearable.brand = w.brand;
+      oldWearable.type = w.type;
+      oldWearable.imagePath = w.imagePath;
+      oldWearable.last = w.last;
+      oldWearable.name = w.name;
+      oldWearable.times = w.times;
+      oldWearable.primaryColor = w.primaryColor;
+      oldWearable.isUploaded = w.isUploaded;
+    } else {
+      _wearables.add(w);
     }
-    _wearables.add(w);
+
     await _handler.writeWearables(_wearables);
     notifyListeners();
   }

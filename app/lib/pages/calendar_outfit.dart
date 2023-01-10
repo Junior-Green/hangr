@@ -5,11 +5,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/model/calendar_map.dart';
 import 'package:hangr/model/custom_icons.dart';
 import 'package:hangr/model/outfit.dart';
 import 'package:hangr/model/wearable.dart';
 import 'package:hangr/widgets/zoomable_wearable.dart';
+import 'package:provider/provider.dart';
 
 class CalendarOutfit extends StatefulWidget {
   final DateTime date;
@@ -434,16 +436,22 @@ class _CalendarOutfitState extends State<CalendarOutfit> {
       );
 
   Future<void> _finalize() async {
-    await widget.map.updateOutfit(
-      widget.date,
-      _tops
-          .followedBy(_headwears)
-          .followedBy(_bottoms)
-          .followedBy(_footwears)
-          .followedBy(_accessories)
-          .map((e) => e.id)
-          .toList(),
-    );
+    final cloudStorage = context.read<CloudStorage>();
+
+    cloudStorage.syncStorage().whenComplete(() async {
+      await widget.map.updateOutfit(
+        widget.date,
+        _tops
+            .followedBy(_headwears)
+            .followedBy(_bottoms)
+            .followedBy(_footwears)
+            .followedBy(_accessories)
+            .map((e) => e.id)
+            .toList(),
+      );
+
+      cloudStorage.uploadCalendarMap();
+    });
 
     if (!mounted) return;
 

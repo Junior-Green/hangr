@@ -260,7 +260,7 @@ class HangrPro {
               _generateFeatureHighlight(
                 context,
                 'Cloud Storage',
-                'Keep a backup of your wardrobe on the Cloud in case anything goes wrong. You can store up to 1500 photos of your clothing and outfits.',
+                'Store up to 1500 clothes and outfits on the cloud to access your wardrobe on any device.',
                 CupertinoIcons.cloud,
               ),
             ],

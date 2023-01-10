@@ -91,7 +91,7 @@ class _CloudBackupState extends State<CloudBackup> {
                                 const SizedBox(height: 2),
                                 if (_isToggled)
                                   Text(
-                                    'Syncing will automatically occur in the background',
+                                    'Syncing will automatically occur in the background when connected to wi-fi.',
                                     style: TextStyle(
                                       color: Theme.of(context)
                                           .colorScheme
@@ -150,7 +150,7 @@ class _CloudBackupState extends State<CloudBackup> {
                                     const Text('Storage'),
                                     const Spacer(),
                                     Text(
-                                      '% ${_storagePercentage * 100}',
+                                      '% ${(_storagePercentage * 100).toStringAsFixed(2)}',
                                       style:
                                           TextStyle(color: _percentageAccent),
                                     ),

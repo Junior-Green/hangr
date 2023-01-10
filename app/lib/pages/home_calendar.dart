@@ -17,8 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class HomeCalendar extends StatefulWidget {
-  final Notifications notifications;
-  const HomeCalendar({Key? key, required this.notifications}) : super(key: key);
+  const HomeCalendar({Key? key}) : super(key: key);
 
   @override
   State<HomeCalendar> createState() => _HomeCalendarState();
@@ -160,7 +159,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
             value: _today,
             builder: (_, __) => CalendarDate(
               DateTime(_today.year, _today.month, _today.day + index),
-              _today,
+  
             ),
           ),
         ),

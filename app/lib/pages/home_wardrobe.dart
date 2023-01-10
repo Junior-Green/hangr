@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:hangr/constants.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/iap.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/calendar_map.dart';
@@ -419,7 +420,20 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
             if (!mounted) return;
             slideDownPageTransition(
               context,
-              AddOutfit(_wearables, _outfits),
+              MultiProvider(
+                providers: [
+                  ChangeNotifierProvider.value(
+                    value: context.read<CloudStorage>(),
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: context.read<MyWearables>(),
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: context.read<MyOutfits>(),
+                  )
+                ],
+                child: const AddOutfit(),
+              ),
               const Duration(milliseconds: 300),
             );
           }
@@ -731,7 +745,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         return _sortDown
             ? a.primaryColor.compareTo(b.primaryColor)
             : a.primaryColor.compareTo(b.primaryColor) * -1;
-      //TODO: LOOP FROM CURRENT DATE TO DATE CREATED TO FIND LAST WORN DATE
+
       case WearableSortType.lastWorn:
         _refreshLastWorn(a);
         _refreshLastWorn(b);
@@ -783,7 +797,17 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
           () async {
             await slideDownPageTransition(
               context,
-              EditWearable(w, _wearables),
+              MultiProvider(
+                providers: [
+                  ChangeNotifierProvider.value(
+                    value: context.read<CloudStorage>(),
+                  ),
+                  ChangeNotifierProvider.value(
+                    value: context.read<MyWearables>(),
+                  ),
+                ],
+                child: EditWearable(w),
+              ),
               const Duration(milliseconds: 300),
             );
             setState(() {});
@@ -802,10 +826,27 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
               await _showWearableDeleteAlert(w);
               return;
             }
-            await _wearables.removeWearable(w);
+            await _deleteWearable(w);
           },
         ),
       ];
+
+  Future<void> _deleteWearable(Wearable w) async {
+    await context.read<CloudStorage>().deleteImage(File(w.imagePath));
+    await _wearables.removeWearable(w);
+
+    if (!mounted) return;
+    context.read<CloudStorage>().syncStorage();
+  }
+
+  Future<void> _deleteOutfit(Outfit o) async {
+    await context.read<CloudStorage>().deleteImage(File(o.imagePath));
+    await _outfits.removeOutfit(o);
+
+    if (!mounted) return;
+    context.read<CloudStorage>().syncStorage();
+  }
+
   List<FocusedMenuItem> _getOutfitMenuOptions(
     Outfit outfit,
     MyOutfits outfits,
@@ -814,7 +855,23 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
         _createEditButton(
           () async => slideDownPageTransition(
             context,
-            EditOutfit(outfit, _outfits, _wearables),
+            MultiProvider(
+              providers: [
+                ChangeNotifierProvider.value(
+                  value: context.read<CloudStorage>(),
+                ),
+                ChangeNotifierProvider.value(
+                  value: context.read<MyWearables>(),
+                ),
+                ChangeNotifierProvider.value(
+                  value: context.read<MyOutfits>(),
+                ),
+              ],
+              child: ChangeNotifierProvider.value(
+                value: context.read<CloudStorage>(),
+                child: EditOutfit(outfit),
+              ),
+            ),
             const Duration(milliseconds: 300),
           ),
         ),
@@ -824,7 +881,7 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
             subject: 'Check out ${_getOutfitSubjectSuffix(outfit)}',
           ),
         ),
-        _createDeleteButton(() => outfits.removeOutfit(outfit)),
+        _createDeleteButton(() => _deleteOutfit(outfit)),
       ];
 
   String _getWearableSubjectSuffix(Wearable w) {
@@ -985,8 +1042,8 @@ class _HomeWardrobeState extends State<HomeWardrobe> {
             radius: const BorderRadius.all(Radius.circular(8)),
             color: Theme.of(context).colorScheme.tertiary,
             onPressed: () async {
-              _outfits.removeOutfitsWithWearable(w.id);
-              await _wearables.removeWearable(w);
+              await _outfits.removeOutfitsWithWearable(w.id);
+              await _deleteWearable(w);
 
               if (!mounted) {
                 return;

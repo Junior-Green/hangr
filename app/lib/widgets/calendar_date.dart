@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hangr/logic/cloud_storage.dart';
 import 'package:hangr/logic/page_transition.dart';
 import 'package:hangr/model/calendar_map.dart';
 import 'package:hangr/model/outfit.dart';
@@ -10,8 +11,8 @@ import 'package:provider/provider.dart';
 
 class CalendarDate extends StatefulWidget {
   final DateTime _date;
-  final DateTime _today;
-  const CalendarDate(this._date, this._today);
+
+  const CalendarDate(this._date);
 
   @override
   State<CalendarDate> createState() => _CalendarDateState();
@@ -71,7 +72,7 @@ class _CalendarDateState extends State<CalendarDate> {
         widget._date.day.toString(),
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: widget._date.isBefore(widget._today)
+          color: widget._date.isBefore(context.read<DateTime>())
               ? Theme.of(context).colorScheme.onSecondary
               : Theme.of(context).colorScheme.onPrimary,
           fontSize: 200,
@@ -85,21 +86,26 @@ class _CalendarDateState extends State<CalendarDate> {
 
     final List<String> outfit = map.getOutfitFromDate(widget._date);
 
-    if (outfit.isNotEmpty && widget._date.isBefore(widget._today)) {
+    if (outfit.isNotEmpty && widget._date.isBefore(context.read<DateTime>())) {
       list.add(
         IconButton(
           padding: EdgeInsets.zero,
-          onPressed: () => Navigator.push(
-            context,
-            _createRoute(
-              CalendarOutfit(
-                map: map,
-                outfits: outfits,
-                wearables: wearables,
-                date: widget._date,
+          onPressed: () async {
+            HapticFeedback.lightImpact();
+            await fadeInPageTransition(
+              context,
+              ChangeNotifierProvider.value(
+                value: context.read<CloudStorage>(),
+                child: CalendarOutfit(
+                  map: map,
+                  outfits: outfits,
+                  wearables: wearables,
+                  date: widget._date,
+                ),
               ),
-            ),
-          ),
+              const Duration(milliseconds: 250),
+            );
+          },
           icon: Icon(
             CupertinoIcons.eye_fill,
             color: Theme.of(context).colorScheme.tertiary,
@@ -107,7 +113,7 @@ class _CalendarDateState extends State<CalendarDate> {
           ),
         ),
       );
-    } else if (!widget._date.isBefore(widget._today)) {
+    } else if (!widget._date.isBefore(context.read<DateTime>())) {
       list.add(
         DecoratedBox(
           decoration: BoxDecoration(
@@ -120,12 +126,15 @@ class _CalendarDateState extends State<CalendarDate> {
               HapticFeedback.lightImpact();
               await fadeInPageTransition(
                 context,
-                CalendarOutfit(
-                  map: map,
-                  outfits: outfits,
-                  wearables: wearables,
-                  date: widget._date,
-                  isEditable: true,
+                ChangeNotifierProvider.value(
+                  value: context.read<CloudStorage>(),
+                  child: CalendarOutfit(
+                    map: map,
+                    outfits: outfits,
+                    wearables: wearables,
+                    date: widget._date,
+                    isEditable: true,
+                  ),
                 ),
                 const Duration(milliseconds: 250),
               );
@@ -148,22 +157,4 @@ class _CalendarDateState extends State<CalendarDate> {
 
     return list;
   }
-
-  Route _createRoute(Widget w) => PageRouteBuilder(
-        pageBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) =>
-            w,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeIn,
-            ),
-            child: child,
-          );
-        },
-      );
 }
