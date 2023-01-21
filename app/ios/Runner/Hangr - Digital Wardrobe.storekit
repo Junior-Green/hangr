@@ -1,0 +1,59 @@
+{
+  "identifier" : "8A7F3AAE",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6444371616",
+    "_developerTeamID" : "39A9Q7DYH2",
+    "_lastSynchronizedDate" : 693019322.83043206
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21059325",
+      "localizations" : [
+
+      ],
+      "name" : "hangr_pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "0.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6444456037",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Pro Subscription (1-Month)",
+              "displayName" : "Hangr Pro",
+              "locale" : "en_CA"
+            },
+            {
+              "description" : "Pro Subscription (1-Month)",
+              "displayName" : "Hangr Pro",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "hangr_pro",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "hangr_pro",
+          "subscriptionGroupID" : "21059325",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}

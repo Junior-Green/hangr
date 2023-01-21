@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>562433583187-i5sb89g0uk199t3b0kg8u7f9u5bfbqb6.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.562433583187-i5sb89g0uk199t3b0kg8u7f9u5bfbqb6</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC8czfwzxZ450bMIqJBvUcND7W4doXzY-4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>562433583187</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.canada.hangr</string>
+	<key>PROJECT_ID</key>
+	<string>hangr-fc824</string>
+	<key>STORAGE_BUCKET</key>
+	<string>hangr-fc824.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:562433583187:ios:4054198b5768fcd8ad7ea6</string>
+	<key>DATABASE_URL</key>
+	<string>https://hangr-fc824-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>
