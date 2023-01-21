@@ -957,14 +957,10 @@ class _AddOutfitState extends State<AddOutfit> {
 
       final cloudStorage = context.read<CloudStorage>();
       final outfits = context.read<MyOutfits>();
-
-      cloudStorage.syncStorage().whenComplete(
-        () async {
-          await File(imagePath).writeAsBytes(_outfitImage!);
-          await outfits.addOutfit(newOutfit);
-          await cloudStorage.uploadOutfits();
-        },
-      );
+      await File(imagePath).writeAsBytes(_outfitImage!);
+      await outfits.addOutfit(newOutfit);
+      
+      cloudStorage.syncStorage();
 
       if (!mounted) return;
       Navigator.pop(context, true);

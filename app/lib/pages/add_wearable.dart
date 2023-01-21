@@ -326,13 +326,10 @@ class _AddWearableState extends State<AddWearable>
 
       final storage = context.read<CloudStorage>();
       final wearables = context.read<MyWearables>();
-      await context.read<CloudStorage>().syncStorage().whenComplete(
-        () async {
-          await wearables.addWearable(newWearable);
-          await File(imagePath).writeAsBytes(widget._image);
-          await storage.uploadWearables();
-        },
-      );
+      
+      await wearables.addWearable(newWearable);
+      await File(imagePath).writeAsBytes(widget._image);
+      storage.syncStorage();
 
       _changeOpacity();
 
