@@ -3,7 +3,7 @@ This is a mobile application for iOS and Android made using Flutter and Firebase
 
 # Instructions/Notes
 
-You can install a beta version of this application for iOS through TestFlight
+You can install a beta version of this application for iOS through [TestFlight](https://testflight.apple.com/join/IZZbNveU)
 
 # Contributers
 Junior Green<<juniorgreen9185@hotmail.com>>
@@ -11,7 +11,32 @@ Junior Green<<juniorgreen9185@hotmail.com>>
 # Gallery
 **Home Calendar**
 
-![get-home-screen](gallery/menu.png)
+<img src="gallery/calendar.png" alt="Home calendar" width="300">
+
+**Login Screen**
+
+<img src="gallery/login.png" alt="Login" width="300">
+
+**Add Clothing Screen**
+
+<img src="gallery/add_wearable.png" alt="Add clothing" width="300">
+
+**Outfit Display**
+
+<img src="gallery/outfit.png" alt="Outfit" width="300">
+
+**Subscription Modal**
+
+<img src="gallery/hangr_pro.png" alt="Hangr Pro" width="300">
+
+**Settings Screen**
+
+<img src="gallery/settings.png" alt="Settings" width="300">
+
+**Wardrobe/Inventory Screen**
+
+<img src="gallery/wardrobe.png" alt="Wardrobe" width="300">
+
 
 
 
