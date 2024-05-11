@@ -21,10 +21,6 @@ Junior Green<<juniorgreen9185@hotmail.com>>
 
 <img src="gallery/add_wearable.png" alt="Add clothing" width="300">
 
-**Outfit Display**
-
-<img src="gallery/outfit.png" alt="Outfit" width="300">
-
 **Subscription Modal**
 
 <img src="gallery/hangr_pro.png" alt="Hangr Pro" width="300">
