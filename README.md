@@ -29,10 +29,6 @@ Junior Green<<juniorgreen9185@hotmail.com>>
 
 <img src="gallery/settings.png" alt="Settings" width="300">
 
-**Wardrobe/Inventory Screen**
-
-<img src="gallery/wardrobe.png" alt="Wardrobe" width="300">
-
 
 
 
